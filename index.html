@@ -5,20 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>The Family Tree — a shared record</title>
 
-<!-- ============================================================= -->
-<!--  SETUP  (do this once — takes ~5 minutes)                      -->
-<!--                                                                 -->
-<!--  1. Go to https://console.firebase.google.com and create a     -->
-<!--     free project (the "Spark" plan — no card needed).          -->
-<!--  2. Build > Firestore Database > Create database > Start in     -->
-<!--     production mode > pick a location.                          -->
-<!--  3. Project settings (gear icon) > scroll to "Your apps" >      -->
-<!--     click the </> web icon, register an app, and COPY the       -->
-<!--     firebaseConfig object it shows you.                         -->
-<!--  4. Paste your config over the placeholder below.               -->
-<!--  5. In Firestore > Rules, paste the rules from the chat and     -->
-<!--     click Publish. Then host the file (see chat for options).   -->
-<!-- ============================================================= -->
+<!-- Paste your Firebase config in the marked spot in the script (same object as before). -->
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,21 +19,31 @@
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
-  body{
-    font-family:"Inter",system-ui,sans-serif;color:var(--ink);
-    background:radial-gradient(120% 90% at 50% -10%, #F1EEE2 0%, var(--paper) 55%, #E2DDCC 100%);
-    background-attachment:fixed;min-height:100vh;line-height:1.5;-webkit-font-smoothing:antialiased;
-  }
-  header{max-width:1100px;margin:0 auto;padding:34px 24px 8px;display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;justify-content:space-between}
+  body{font-family:"Inter",system-ui,sans-serif;color:var(--ink);background:radial-gradient(120% 90% at 50% -10%, #F1EEE2 0%, var(--paper) 55%, #E2DDCC 100%);background-attachment:fixed;min-height:100vh;line-height:1.5;-webkit-font-smoothing:antialiased}
+  header{max-width:1180px;margin:0 auto;padding:30px 24px 6px;display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;justify-content:space-between}
   .brand .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 6px;font-weight:600}
-  .brand h1{font-family:"Fraunces",serif;font-weight:500;font-size:clamp(30px,5vw,46px);margin:0;letter-spacing:-.01em;line-height:1.02}
-  .brand p{margin:8px 0 0;color:var(--ink-soft);max-width:46ch;font-size:14.5px}
-  .who{background:var(--paper-card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;min-width:210px;box-shadow:var(--shadow)}
+  .brand h1{font-family:"Fraunces",serif;font-weight:500;font-size:clamp(28px,4.6vw,42px);margin:0;letter-spacing:-.01em;line-height:1.02}
+  .brand p{margin:7px 0 0;color:var(--ink-soft);max-width:48ch;font-size:14px}
+  .who{background:var(--paper-card);border:1px solid var(--border);border-radius:12px;padding:11px 14px;min-width:200px;box-shadow:var(--shadow)}
   .who .lab{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);font-weight:600}
-  .who .val{font-family:"Fraunces",serif;font-size:19px;margin-top:2px;display:flex;align-items:center;gap:8px}
+  .who .val{font-family:"Fraunces",serif;font-size:18px;margin-top:2px;display:flex;align-items:center;gap:8px}
   .who .val .dot{width:8px;height:8px;border-radius:50%;background:var(--ochre);flex:none}
-  .who button.link{background:none;border:none;color:var(--green);font:inherit;font-size:12.5px;cursor:pointer;padding:0;margin-top:6px;text-decoration:underline;text-underline-offset:2px}
-  .toolbar{max-width:1100px;margin:14px auto 0;padding:0 24px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+  .who button.link{background:none;border:none;color:var(--green);font:inherit;font-size:12.5px;cursor:pointer;padding:0;margin-top:5px;text-decoration:underline;text-underline-offset:2px}
+
+  .toolbar{max-width:1180px;margin:14px auto 0;padding:0 24px;display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center;justify-content:space-between}
+  .search{position:relative;flex:1;min-width:220px;max-width:380px}
+  .search .ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink-soft);font-size:15px;pointer-events:none}
+  .search input{width:100%;font:inherit;font-size:14px;padding:10px 12px 10px 34px;border-radius:11px;border:1px solid var(--border);background:var(--paper-card);color:var(--ink);box-shadow:var(--shadow)}
+  .search input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(62,92,69,.15)}
+  .results{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--paper-card);border:1px solid var(--border);border-radius:12px;box-shadow:0 22px 44px -22px rgba(35,48,42,.6);overflow:hidden;display:none;z-index:30;max-height:320px;overflow-y:auto}
+  .results.open{display:block}
+  .results .res{display:flex;justify-content:space-between;align-items:baseline;gap:10px;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid #ECE7D8;font:inherit;padding:10px 13px;cursor:pointer;color:var(--ink)}
+  .results .res:last-child{border-bottom:none}
+  .results .res:hover,.results .res.active{background:#FBF9F2}
+  .results .res .nm{font-family:"Fraunces",serif;font-size:15px}
+  .results .res .rel{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
+  .results .nohit{padding:12px 13px;color:var(--ink-soft);font-size:13px}
+  .tbright{display:flex;align-items:center;gap:14px}
   .stat{font-size:13px;color:var(--ink-soft)}
   .stat b{color:var(--ink);font-weight:600}
   .live{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-soft)}
@@ -55,8 +52,14 @@
   .live .pulse::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1px solid var(--green);opacity:.5;animation:ping 2.4s ease-out infinite}
   .live .pulse.off::after{display:none}
   @keyframes ping{0%{transform:scale(.6);opacity:.6}100%{transform:scale(1.8);opacity:0}}
-  .canvas{max-width:1100px;margin:18px auto 60px;padding:8px 8px 40px;overflow-x:auto}
-  .tree{display:inline-block;min-width:100%;padding:24px 32px;text-align:center}
+
+  .canvas{max-width:1180px;margin:14px auto 28px;padding:0 24px}
+  .viewport{position:relative;height:74vh;min-height:430px;border:1px solid var(--border);border-radius:16px;overflow:hidden;cursor:grab;touch-action:none;
+    background:radial-gradient(circle, rgba(120,108,84,.10) 1px, transparent 1.5px) 0 0/24px 24px, #EFEBDD;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.4), var(--shadow)}
+  .viewport.grabbing{cursor:grabbing}
+  .stage{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform}
+  .tree{display:inline-block;padding:30px 40px}
   .tree ul{position:relative;padding-top:26px;margin:0;display:flex;justify-content:center;list-style:none}
   .tree li{list-style:none;position:relative;padding:26px 10px 0;display:flex;flex-direction:column;align-items:center}
   .tree li::before,.tree li::after{content:"";position:absolute;top:0;right:50%;border-top:2px solid var(--branch);width:50%;height:26px}
@@ -70,25 +73,41 @@
   .tree > ul > li::before,.tree > ul > li::after{display:none}
   .tree > ul > li{padding-top:0}
   .tree > ul{padding-top:0}
-  .node{position:relative;background:var(--paper-card);border:1px solid var(--border);border-radius:13px;padding:13px 15px 12px;min-width:150px;max-width:210px;box-shadow:var(--shadow);text-align:left;transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;animation:rise .4s ease both}
-  @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-  .node:hover{transform:translateY(-2px);border-color:#C9C0A8;box-shadow:0 1px 0 rgba(35,48,42,.05),0 16px 30px -20px rgba(35,48,42,.55)}
+  .unit{display:flex;flex-direction:column;align-items:center}
+  .gen{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;margin-bottom:6px;text-align:center}
+  .couple{display:flex;align-items:stretch;justify-content:center}
+  .marriage{position:relative;width:30px;align-self:center;flex:none}
+  .marriage::before{content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:var(--branch);transform:translateY(-50%)}
+  .marriage::after{content:"";position:absolute;left:50%;top:50%;width:9px;height:9px;background:var(--paper-card);border:2px solid var(--branch);border-radius:50%;transform:translate(-50%,-50%)}
+  .node{position:relative;background:var(--paper-card);border:1px solid var(--border);border-radius:13px;padding:13px 15px 12px;min-width:150px;max-width:210px;box-shadow:var(--shadow);text-align:left;display:flex;flex-direction:column;transition:box-shadow .18s ease, border-color .18s ease}
+  .node:hover{border-color:#C9C0A8;box-shadow:0 1px 0 rgba(35,48,42,.05),0 16px 30px -20px rgba(35,48,42,.55)}
   .node.mine{border-color:var(--ochre)}
-  .node.mine::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:3px;background:var(--ochre)}
-  .node .gen{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;margin-bottom:2px}
+  .node.mine::after{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:3px;background:var(--ochre)}
+  .node.spouse{background:#F3F0E4}
+  .node.flash{animation:flash 1.8s ease}
+  @keyframes flash{0%,100%{box-shadow:var(--shadow)}15%,55%{box-shadow:0 0 0 3px var(--ochre),0 16px 30px -18px rgba(35,48,42,.6)}}
   .node .name{font-family:"Fraunces",serif;font-size:19px;font-weight:500;line-height:1.15;word-break:break-word}
   .node .meta{margin-top:5px;font-family:"Fraunces",serif;font-style:italic;font-size:12.5px;color:var(--ink-soft);line-height:1.35}
   .node .meta .by{color:var(--ochre)}
-  .node .actions{display:flex;gap:4px;margin-top:11px;flex-wrap:wrap}
-  .node .actions button{font:inherit;font-size:11.5px;font-weight:500;cursor:pointer;border-radius:7px;border:1px solid var(--border);background:#fff;color:var(--ink);padding:4px 8px;line-height:1;transition:background .15s,color .15s,border-color .15s}
+  .node .actions{display:flex;gap:4px;margin-top:auto;padding-top:11px;flex-wrap:wrap}
+  .node .actions button{font:inherit;font-size:11.5px;font-weight:500;cursor:pointer;border-radius:7px;border:1px solid var(--border);background:#fff;color:var(--ink);padding:4px 9px;line-height:1;transition:background .15s,color .15s,border-color .15s}
   .node .actions button:hover{border-color:#BFB69E;background:#FBF9F2}
   .node .actions button.add{background:var(--green);border-color:var(--green);color:#F4F2E8}
-  .node .actions button.add:hover{background:var(--green-deep);border-color:var(--green-deep)}
+  .node .actions button.add:hover{background:var(--green-deep)}
   .node .actions button.del:hover{color:var(--danger);border-color:#D8B4AC}
-  .empty{max-width:520px;margin:30px auto;padding:40px 28px;text-align:center;background:var(--paper-card);border:1px dashed #CBC2AB;border-radius:18px}
+
+  .zoomctl{position:absolute;right:14px;bottom:14px;display:flex;align-items:center;gap:6px;background:var(--paper-card);border:1px solid var(--border);border-radius:12px;padding:5px;box-shadow:var(--shadow);z-index:20}
+  .zoomctl button{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--ink);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+  .zoomctl button:hover{background:#FBF9F2}
+  .zoomctl .pct{font-size:12px;color:var(--ink-soft);min-width:44px;text-align:center;font-variant-numeric:tabular-nums}
+  .zoomctl .fit{font-size:15px}
+  .hint{position:absolute;left:14px;bottom:14px;font-size:11.5px;color:var(--ink-soft);background:var(--paper-card);border:1px solid var(--border);border-radius:8px;padding:5px 10px;z-index:20;opacity:.92;transition:opacity .5s;pointer-events:none}
+  .hint.gone{opacity:0}
+
+  .empty{padding:40px 28px;text-align:center;background:var(--paper-card);border:1px dashed #CBC2AB;border-radius:18px;width:min(520px,80vw)}
   .empty .seed{font-size:34px;line-height:1}
   .empty h2{font-family:"Fraunces",serif;font-weight:500;font-size:24px;margin:14px 0 6px}
-  .empty p{color:var(--ink-soft);margin:0 auto 20px;max-width:38ch}
+  .empty p{color:var(--ink-soft);margin:0 auto 20px;max-width:40ch}
   .btn{font:inherit;font-weight:600;font-size:14px;cursor:pointer;border-radius:11px;padding:11px 18px;border:1px solid var(--green);background:var(--green);color:#F4F2E8;box-shadow:var(--shadow);transition:background .15s,transform .1s}
   .btn:hover{background:var(--green-deep)}
   .btn:active{transform:translateY(1px)}
@@ -97,22 +116,24 @@
   .scrim{position:fixed;inset:0;background:rgba(35,48,42,.32);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
   .scrim.open{display:flex;animation:fade .18s ease}
   @keyframes fade{from{opacity:0}to{opacity:1}}
-  .modal{background:var(--paper-card);border:1px solid var(--border);border-radius:18px;width:100%;max-width:440px;padding:24px 24px 22px;box-shadow:0 30px 60px -24px rgba(35,48,42,.6);animation:pop .22s cubic-bezier(.2,.8,.2,1)}
+  .modal{background:var(--paper-card);border:1px solid var(--border);border-radius:18px;width:100%;max-width:460px;padding:24px;box-shadow:0 30px 60px -24px rgba(35,48,42,.6);animation:pop .22s cubic-bezier(.2,.8,.2,1)}
   @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
   .modal .eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);font-weight:600}
   .modal h3{font-family:"Fraunces",serif;font-weight:500;font-size:23px;margin:6px 0 4px}
-  .modal p.hint{margin:0 0 16px;color:var(--ink-soft);font-size:13.5px}
+  .modal p.hint2{margin:0 0 14px;color:var(--ink-soft);font-size:13.5px;min-height:19px}
+  .rel-row{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 16px}
+  .rel-row button{font:inherit;font-size:13px;font-weight:500;padding:7px 13px;border-radius:999px;border:1px solid var(--border);background:#fff;color:var(--ink);cursor:pointer;transition:background .12s,border-color .12s,color .12s}
+  .rel-row button:hover:not(:disabled){background:#FBF9F2;border-color:#BFB69E}
+  .rel-row button.sel{background:var(--green);border-color:var(--green);color:#F4F2E8}
+  .rel-row button:disabled{opacity:.38;cursor:not-allowed}
   .modal label{display:block;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;margin-bottom:6px}
   .modal input{width:100%;font:inherit;font-size:16px;padding:11px 13px;border-radius:11px;border:1px solid var(--border);background:#fff;color:var(--ink)}
   .modal input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(62,92,69,.15)}
   .modal .row{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
-  .modal code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;background:#EFEBDD;border:1px solid var(--border);border-radius:6px;padding:1px 6px}
-  .modal ol{margin:0 0 4px;padding-left:18px;color:var(--ink);font-size:14px}
-  .modal ol li{margin:7px 0}
   :focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:6px}
-  .footnote{max-width:1100px;margin:0 auto 50px;padding:0 24px;color:var(--ink-soft);font-size:12px;text-align:center}
-  @media (max-width:560px){header{padding-top:24px}.who{min-width:0;flex:1}}
-  @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+  .footnote{max-width:1180px;margin:0 auto 50px;padding:0 24px;color:var(--ink-soft);font-size:12px;text-align:center}
+  @media (max-width:560px){header{padding-top:22px}.who{min-width:0}.tbright{width:100%;justify-content:space-between}}
+  @media (prefers-reduced-motion:reduce){*{animation:none !important}}
 </style>
 </head>
 <body>
@@ -120,7 +141,7 @@
     <div class="brand">
       <p class="eyebrow">A shared family record</p>
       <h1>The Family Tree</h1>
-      <p>Add the people in your family. Every name keeps a note of who added it — and the tree updates live for everyone who opens this page.</p>
+      <p>Add parents to grow upward, children to grow down, and siblings to widen any branch. Every name notes who added it, and the tree updates live for everyone.</p>
     </div>
     <div class="who" id="whoCard" hidden>
       <div class="lab">You're adding as</div>
@@ -130,32 +151,56 @@
   </header>
 
   <div class="toolbar">
-    <div class="stat"><b id="countNum">0</b> people on the tree</div>
-    <div class="live"><span class="pulse off" id="pulse"></span><span id="liveLabel">Connecting…</span></div>
+    <div class="search">
+      <span class="ico">⌕</span>
+      <input id="search" type="text" placeholder="Search for a name…" autocomplete="off" aria-label="Search names" />
+      <div class="results" id="searchResults"></div>
+    </div>
+    <div class="tbright">
+      <div class="stat"><b id="countNum">0</b> people</div>
+      <div class="live"><span class="pulse off" id="pulse"></span><span id="liveLabel">Connecting…</span></div>
+    </div>
   </div>
 
-  <main class="canvas" id="canvas"><div class="tree" id="tree"></div></main>
+  <main class="canvas">
+    <div class="viewport" id="viewport">
+      <div class="stage" id="stage"><div class="tree" id="tree"></div></div>
+      <div class="hint" id="hint">Drag to move · scroll or pinch to zoom</div>
+      <div class="zoomctl">
+        <button id="zOut" aria-label="Zoom out">−</button>
+        <span class="pct" id="zoomPct">100%</span>
+        <button id="zIn" aria-label="Zoom in">+</button>
+        <button class="fit" id="zFit" aria-label="Fit to screen" title="Fit to screen">⤢</button>
+      </div>
+    </div>
+  </main>
 
   <p class="footnote">Anyone who opens this page can add, edit, or remove names, and everyone sees the same tree. Please be kind to the record.</p>
 
-  <!-- Identity modal -->
   <div class="scrim" id="idScrim" role="dialog" aria-modal="true" aria-labelledby="idTitle">
     <div class="modal">
       <p class="eyebrow">Before you begin</p>
       <h3 id="idTitle">What should we call you?</h3>
-      <p class="hint">Your name is shown beside every person you add, so the rest of the family knows who contributed.</p>
+      <p class="hint2">Your name is shown beside every person you add, so the rest of the family knows who contributed.</p>
       <label for="idInput">Your name</label>
       <input id="idInput" type="text" maxlength="40" placeholder="e.g. Grandma Rosa" autocomplete="name" />
       <div class="row"><button class="btn" id="idSave">Save</button></div>
     </div>
   </div>
 
-  <!-- Add / edit person modal -->
   <div class="scrim" id="personScrim" role="dialog" aria-modal="true" aria-labelledby="pTitle">
     <div class="modal">
-      <p class="eyebrow" id="pEyebrow">New person</p>
+      <p class="eyebrow" id="pEyebrow">Add relative</p>
       <h3 id="pTitle">Add a name</h3>
-      <p class="hint" id="pHint"></p>
+      <div class="rel-row" id="relRow">
+        <button data-rel="father">Father</button>
+        <button data-rel="mother">Mother</button>
+        <button data-rel="brother">Brother</button>
+        <button data-rel="sister">Sister</button>
+        <button data-rel="child">Child</button>
+        <button data-rel="partner">Partner</button>
+      </div>
+      <p class="hint2" id="pHint"></p>
       <label for="pInput">Full name</label>
       <input id="pInput" type="text" maxlength="60" placeholder="e.g. Maria Santos" />
       <div class="row">
@@ -165,28 +210,18 @@
     </div>
   </div>
 
-  <!-- Setup needed modal -->
   <div class="scrim" id="setupScrim" role="dialog" aria-modal="true" aria-labelledby="sTitle">
     <div class="modal">
       <p class="eyebrow">One step left</p>
       <h3 id="sTitle">Connect your Firebase project</h3>
-      <p class="hint">This page is ready, but it needs a free Firebase database to store and share the tree.</p>
-      <ol>
-        <li>Create a free project at <code>console.firebase.google.com</code></li>
-        <li>Add a <b>Firestore Database</b> (production mode)</li>
-        <li>Register a <b>Web app</b> and copy its <code>firebaseConfig</code></li>
-        <li>Paste that config into this file, near the top of the script, then reload</li>
-      </ol>
-      <p class="hint" style="margin-top:14px">Full instructions and the security rules are in the message that came with this file.</p>
+      <p class="hint2">This page is ready, but it needs your Firebase config pasted into the script near the top of this file.</p>
     </div>
   </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-  import {
-    getFirestore, collection, onSnapshot, addDoc, updateDoc,
-    deleteDoc, doc, writeBatch
-  } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+  import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, writeBatch }
+    from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
  // Import the functions you need from the SDKs you need
 
@@ -203,37 +238,82 @@ const firebaseConfig = {
   //measurementId: "G-D1HF5LD8ZK"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-
-
-  const $ = s => document.querySelector(s);
+const $ = s => document.querySelector(s);
   const state = { people:{}, me:"" };
-
-  /* ---- utils ---- */
+  const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
   function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
   const ROMAN=["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"];
   const roman=n=>ROMAN[n]||String(n);
   function lsGet(k){ try{ return localStorage.getItem(k)||""; }catch(e){ return ""; } }
   function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 
-  /* ---- not configured yet? show setup, stop ---- */
+  const viewport=$("#viewport"), stage=$("#stage"), tree=$("#tree");
+
   if(firebaseConfig.projectId.startsWith("PASTE_")){
     $("#setupScrim").classList.add("open");
-    $("#liveLabel").textContent = "Not connected — needs setup";
-    renderEmptyHint();
+    $("#liveLabel").textContent="Not connected — needs setup";
     throw new Error("Firebase not configured");
   }
+  const app=initializeApp(firebaseConfig);
+  const db=getFirestore(app);
+  const peopleCol=collection(db,"people");
 
-  /* ---- init firebase ---- */
-  const db = getFirestore(app);
-  const peopleCol = collection(db, "people");
+  /* ---------- pan / zoom ---------- */
+  const MIN=0.15, MAX=3;
+  let scale=1, tx=0, ty=0, animT=null;
+  function applyTransform(){ stage.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`; $("#zoomPct").textContent=Math.round(scale*100)+"%"; }
+  function withAnim(fn){ stage.style.transition="transform .35s cubic-bezier(.2,.8,.2,1)"; fn(); clearTimeout(animT); animT=setTimeout(()=>{ stage.style.transition=""; },380); }
+  function zoomAt(px,py,factor){ const wx=(px-tx)/scale, wy=(py-ty)/scale; scale=clamp(scale*factor,MIN,MAX); tx=px-wx*scale; ty=py-wy*scale; applyTransform(); }
+  function zoomButton(factor){ const vp=viewport.getBoundingClientRect(); withAnim(()=>zoomAt(vp.width/2,vp.height/2,factor)); }
+  function fit(){
+    const w=tree.offsetWidth, h=tree.offsetHeight; if(!w||!h) return;
+    const vp=viewport.getBoundingClientRect(), pad=46;
+    const s=clamp(Math.min((vp.width-pad)/w,(vp.height-pad)/h,1.2),MIN,MAX);
+    withAnim(()=>{ scale=s; tx=(vp.width-w*s)/2; ty=Math.max(22,(vp.height-h*s)/2); applyTransform(); });
+  }
+  function focusNode(id, target){
+    const el=tree.querySelector(`.node[data-id="${CSS.escape(id)}"]`); if(!el) return;
+    const vp=viewport.getBoundingClientRect(), r=el.getBoundingClientRect();
+    const scx=(r.left+r.width/2)-vp.left, scy=(r.top+r.height/2)-vp.top;
+    const wx=(scx-tx)/scale, wy=(scy-ty)/scale;
+    withAnim(()=>{ scale=clamp(target||Math.max(scale,1),MIN,MAX); tx=vp.width/2-wx*scale; ty=vp.height/2-wy*scale; applyTransform(); });
+    el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+  }
+  viewport.addEventListener("wheel",e=>{ e.preventDefault(); hideHint(); const vp=viewport.getBoundingClientRect(); zoomAt(e.clientX-vp.left, e.clientY-vp.top, Math.exp(-e.deltaY*0.0015)); },{passive:false});
+  const ptrs=new Map(); let panning=false, moved=false, sx=0, sy=0, stx=0, sty=0, pinchDist=0, pinchScale=1, pinchWorld={x:0,y:0}, suppressClick=false;
+  const ptrDist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+  viewport.addEventListener("pointerdown",e=>{
+    ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(ptrs.size===1){ panning=true; moved=false; sx=e.clientX; sy=e.clientY; stx=tx; sty=ty; }
+    else if(ptrs.size===2){ panning=false; const [a,b]=[...ptrs.values()], vp=viewport.getBoundingClientRect(); pinchDist=ptrDist(a,b); pinchScale=scale; const mx=(a.x+b.x)/2-vp.left, my=(a.y+b.y)/2-vp.top; pinchWorld={x:(mx-tx)/scale,y:(my-ty)/scale}; }
+  });
+  viewport.addEventListener("pointermove",e=>{
+    if(!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(ptrs.size>=2){ const [a,b]=[...ptrs.values()], vp=viewport.getBoundingClientRect(); scale=clamp(pinchScale*(ptrDist(a,b)/pinchDist),MIN,MAX); const mx=(a.x+b.x)/2-vp.left, my=(a.y+b.y)/2-vp.top; tx=mx-pinchWorld.x*scale; ty=my-pinchWorld.y*scale; applyTransform(); hideHint(); }
+    else if(panning){ const dx=e.clientX-sx, dy=e.clientY-sy; if(!moved && Math.hypot(dx,dy)>5){ moved=true; viewport.classList.add("grabbing"); hideHint(); try{viewport.setPointerCapture(e.pointerId);}catch(_){ } } if(moved){ tx=stx+dx; ty=sty+dy; applyTransform(); } }
+  });
+  function endPointer(e){
+    if(!ptrs.has(e.pointerId)) return; ptrs.delete(e.pointerId);
+    if(ptrs.size===0){ if(moved){ suppressClick=true; setTimeout(()=>suppressClick=false,30); } panning=false; viewport.classList.remove("grabbing"); }
+    else if(ptrs.size===1){ const [p]=[...ptrs.values()]; panning=true; moved=true; sx=p.x; sy=p.y; stx=tx; sty=ty; }
+  }
+  viewport.addEventListener("pointerup",endPointer);
+  viewport.addEventListener("pointercancel",endPointer);
+  viewport.addEventListener("click",e=>{ if(suppressClick){ e.stopPropagation(); e.preventDefault(); suppressClick=false; } },true);
+  $("#zIn").addEventListener("click",()=>zoomButton(1.25));
+  $("#zOut").addEventListener("click",()=>zoomButton(0.8));
+  $("#zFit").addEventListener("click",fit);
+  document.addEventListener("keydown",e=>{ if(["INPUT","TEXTAREA"].includes(document.activeElement?.tagName)) return; if(e.key==="+"||e.key==="=") zoomButton(1.25); else if(e.key==="-") zoomButton(0.8); else if(e.key==="0") fit(); });
+  let hintTimer=setTimeout(hideHint,6000);
+  function hideHint(){ const h=$("#hint"); if(h) h.classList.add("gone"); clearTimeout(hintTimer); }
 
-  /* ---- tree building & rendering ---- */
+  /* ---------- tree model & render ---------- */
   function childrenMap(people){
     const map={};
     Object.values(people).forEach(p=>{
-      const pid=(p.parentId && people[p.parentId])?p.parentId:"__root__";
+      if(p.spouseOf) return;
+      const parent=p.parentId?people[p.parentId]:null;
+      const pid=(parent && !parent.spouseOf)?p.parentId:"__root__";
       (map[pid]=map[pid]||[]).push(p);
     });
     Object.values(map).forEach(a=>a.sort((x,y)=>(x.createdAt||0)-(y.createdAt||0)));
@@ -244,128 +324,173 @@ const app = initializeApp(firebaseConfig);
     const wasEdited=p.editedBy && (p.editedBy!==p.addedBy || (p.updatedAt && p.updatedAt!==p.createdAt));
     return added + (wasEdited?` · edited by <span class="by">${esc(p.editedBy)}</span>`:"");
   }
-  function nodeCard(p,gen){
+  function card(p,role){
     const mine=state.me && (p.editedBy===state.me || p.addedBy===state.me);
-    return `<div class="node ${mine?'mine':''}" data-id="${p.id}">
-      <div class="gen">Generation ${roman(gen)}</div>
-      <div class="name">${esc(p.name)}</div>
-      <div class="meta">${metaLine(p)}</div>
-      <div class="actions">
-        <button class="add" data-act="add" data-id="${p.id}">+ Add child</button>
-        <button data-act="edit" data-id="${p.id}">Edit</button>
-        <button class="del" data-act="del" data-id="${p.id}">Remove</button>
-      </div></div>`;
+    let actions;
+    if(role==="spouse"){
+      actions=`<button data-act="edit" data-id="${p.id}">Edit</button><button class="del" data-act="del" data-id="${p.id}">Remove</button>`;
+    }else{
+      actions=`<button class="add" data-act="addrel" data-id="${p.id}">+ Add</button><button data-act="edit" data-id="${p.id}">Edit</button><button class="del" data-act="del" data-id="${p.id}">Remove</button>`;
+    }
+    return `<div class="node ${role==='spouse'?'spouse':''} ${mine?'mine':''}" data-id="${p.id}"><div class="name">${esc(p.name)}</div><div class="meta">${metaLine(p)}</div><div class="actions">${actions}</div></div>`;
   }
-  function renderNode(p,map,gen){
+  function unit(p,people,gen){
+    const spouse=p.spouseId?people[p.spouseId]:null;
+    let inner=card(p,"anchor");
+    if(spouse) inner+=`<div class="marriage" aria-hidden="true"></div>`+card(spouse,"spouse");
+    return `<div class="unit"><div class="gen">Generation ${roman(gen)}</div><div class="couple">${inner}</div></div>`;
+  }
+  function renderNode(p,map,people,gen){
     const kids=map[p.id]||[];
-    const kidsHtml=kids.length?`<ul>${kids.map(k=>renderNode(k,map,gen+1)).join("")}</ul>`:"";
-    return `<li>${nodeCard(p,gen)}${kidsHtml}</li>`;
-  }
-  function renderEmptyHint(){
-    $("#tree").innerHTML = `<div class="empty"><div class="seed">🌱</div>
-      <h2>Plant the first person</h2>
-      <p>Start with whoever you'd like at the top of the tree — a grandparent, an ancestor, or yourself.</p>
-      <button class="btn" id="addRoot">Add the first person</button></div>`;
-    const b=$("#addRoot"); if(b) b.addEventListener("click",()=>openPerson({mode:"add",parentId:null}));
+    const kidsHtml=kids.length?`<ul>${kids.map(k=>renderNode(k,map,people,gen+1)).join("")}</ul>`:"";
+    return `<li>${unit(p,people,gen)}${kidsHtml}</li>`;
   }
   function render(){
     const people=state.people, count=Object.keys(people).length;
     $("#countNum").textContent=count;
-    if(count===0){ renderEmptyHint(); return; }
-    const map=childrenMap(people);
-    const roots=map["__root__"]||[];
-    $("#tree").innerHTML=`<ul>${roots.map(r=>renderNode(r,map,1)).join("")}</ul>`;
+    if(count===0){
+      tree.innerHTML=`<div class="empty"><div class="seed">🌱</div><h2>Plant the first person</h2><p>Start with anyone — yourself, a parent, a grandparent. You can add their parents, children, and siblings afterward to grow in every direction.</p><button class="btn" id="addRoot">Add the first person</button></div>`;
+      const b=$("#addRoot"); if(b) b.addEventListener("click",()=>openPerson({mode:"first"}));
+      return;
+    }
+    const map=childrenMap(people), roots=map["__root__"]||[];
+    tree.innerHTML=`<ul>${roots.map(r=>renderNode(r,map,people,1)).join("")}</ul>`;
   }
 
-  /* ---- identity ---- */
-  function showIdentity(){
-    const card=$("#whoCard");
-    if(state.me){ card.hidden=false; $("#whoName").textContent=state.me; } else card.hidden=true;
+  /* ---------- search ---------- */
+  const searchInput=$("#search"), results=$("#searchResults");
+  function relLabel(p){
+    if(p.spouseOf && state.people[p.spouseOf]) return "spouse of "+state.people[p.spouseOf].name;
+    if(p.parentId && state.people[p.parentId]) return "child of "+state.people[p.parentId].name;
+    return "top of tree";
   }
-  function openIdentity(){
-    $("#idInput").value=state.me||"";
-    $("#idScrim").classList.add("open");
-    setTimeout(()=>$("#idInput").focus(),50);
+  function runSearch(){
+    const q=searchInput.value.trim().toLowerCase();
+    if(!q){ results.classList.remove("open"); results.innerHTML=""; return; }
+    const matches=Object.values(state.people).filter(p=>(p.name||"").toLowerCase().includes(q)).slice(0,10);
+    if(!matches.length){ results.innerHTML=`<div class="nohit">No one by that name yet</div>`; results.classList.add("open"); return; }
+    results.innerHTML=matches.map((p,i)=>`<button class="res ${i===0?'active':''}" data-id="${p.id}"><span class="nm">${esc(p.name)}</span><span class="rel">${esc(relLabel(p))}</span></button>`).join("");
+    results.classList.add("open");
   }
+  function goTo(id){ results.classList.remove("open"); searchInput.value=state.people[id]?.name||""; focusNode(id,Math.max(scale,1)); }
+  searchInput.addEventListener("input",runSearch);
+  searchInput.addEventListener("focus",runSearch);
+  searchInput.addEventListener("keydown",e=>{ if(e.key==="Enter"){ const first=results.querySelector(".res"); if(first) goTo(first.dataset.id); } else if(e.key==="Escape"){ results.classList.remove("open"); searchInput.blur(); } });
+  results.addEventListener("click",e=>{ const b=e.target.closest(".res"); if(b) goTo(b.dataset.id); });
+  document.addEventListener("click",e=>{ if(!e.target.closest(".search")) results.classList.remove("open"); });
+
+  /* ---------- identity ---------- */
+  function showIdentity(){ const c=$("#whoCard"); if(state.me){ c.hidden=false; $("#whoName").textContent=state.me; } else c.hidden=true; }
+  function openIdentity(){ $("#idInput").value=state.me||""; $("#idScrim").classList.add("open"); setTimeout(()=>$("#idInput").focus(),50); }
   function saveIdentity(){
-    const v=$("#idInput").value.trim();
-    if(!v){ $("#idInput").focus(); return; }
-    state.me=v.slice(0,40); lsSet("ft_me",state.me);
-    showIdentity(); $("#idScrim").classList.remove("open");
-    if(pendingAdd){ const pa=pendingAdd; pendingAdd=null; openPerson(pa); }
+    const v=$("#idInput").value.trim(); if(!v){ $("#idInput").focus(); return; }
+    state.me=v.slice(0,40); lsSet("ft_me",state.me); showIdentity(); $("#idScrim").classList.remove("open");
+    if(pendingAfterName){ const op=pendingAfterName; pendingAfterName=null; openPerson(op); }
     render();
   }
 
-  /* ---- add / edit ---- */
-  let editingId=null, addParentId=null, pendingAdd=null;
+  /* ---------- add / edit relatives ---------- */
+  let pendingOp=null, pendingAfterName=null, selRel="child", pendingFocusId=null;
+  const REL_HINT={
+    father:p=>`Adds ${p.name}'s father in the generation above.`,
+    mother:p=>`Adds ${p.name}'s mother in the generation above.`,
+    brother:p=>`Adds a brother beside ${p.name}.`,
+    sister:p=>`Adds a sister beside ${p.name}.`,
+    child:p=>`Adds a child below ${p.name}.`,
+    partner:p=>`Adds ${p.name}'s spouse beside them.`
+  };
+  function relDisabled(r,hasBoth,partnerAvail){ if(r==="father"||r==="mother") return hasBoth; if(r==="partner") return !partnerAvail; return false; }
+  function setPill(r){ selRel=r; $("#relRow").querySelectorAll("button").forEach(b=>b.classList.toggle("sel",b.dataset.rel===r)); }
+  function updateRelHint(){ const P=state.people[pendingOp?.personId]; if(P && REL_HINT[selRel]) $("#pHint").textContent=REL_HINT[selRel](P); }
   function openPerson(opts){
-    if(!state.me){ pendingAdd=opts; openIdentity(); return; }
+    if(!state.me){ pendingAfterName=opts; openIdentity(); return; }
+    pendingOp=opts;
+    const relRow=$("#relRow");
     if(opts.mode==="edit"){
-      const p=state.people[opts.id]; editingId=opts.id; addParentId=null;
+      relRow.style.display="none";
+      const p=state.people[opts.id];
       $("#pEyebrow").textContent="Edit"; $("#pTitle").textContent="Edit this name";
-      $("#pHint").textContent="Your name will be recorded as the last person to edit it.";
-      $("#pInput").value=p?p.name:"";
-    } else {
-      editingId=null; addParentId=opts.parentId;
-      const parent=opts.parentId?state.people[opts.parentId]:null;
-      $("#pEyebrow").textContent=parent?"New person":"First person";
-      $("#pTitle").textContent=parent?`Add a child of ${parent.name}`:"Add the first person";
-      $("#pHint").textContent=parent?"":"This person sits at the top of the tree.";
-      $("#pInput").value="";
+      $("#pHint").textContent="Your name will be recorded as the last person to edit it."; $("#pInput").value=p?p.name:"";
+    } else if(opts.mode==="first"){
+      relRow.style.display="none";
+      $("#pEyebrow").textContent="First person"; $("#pTitle").textContent="Add the first person";
+      $("#pHint").textContent="This person sits at the top to start. You can add their parents later to grow upward."; $("#pInput").value="";
+    } else { // relative
+      const P=state.people[opts.personId];
+      const A=P.parentId?state.people[P.parentId]:null;
+      const hasBoth=!!(A && A.spouseId), partnerAvail=!P.spouseId;
+      relRow.style.display="flex";
+      relRow.querySelectorAll("button").forEach(b=>{ b.disabled=relDisabled(b.dataset.rel,hasBoth,partnerAvail); });
+      if(relDisabled(selRel,hasBoth,partnerAvail)) selRel="child";
+      setPill(selRel);
+      $("#pEyebrow").textContent="Add relative"; $("#pTitle").textContent=`Add a relative of ${P.name}`;
+      updateRelHint(); $("#pInput").value="";
     }
     $("#personScrim").classList.add("open");
     setTimeout(()=>{const i=$("#pInput");i.focus();i.select();},50);
   }
+  $("#relRow").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||b.disabled) return; setPill(b.dataset.rel); updateRelHint(); $("#pInput").focus(); });
+
+  function base(name,extra){ const t=Date.now(); return Object.assign({name:name.slice(0,60),parentId:null,addedBy:state.me,editedBy:null,createdAt:t,updatedAt:t},extra); }
+  async function createRelative(rel,personId,name){
+    const P=state.people[personId]; if(!P) return;
+    if(rel==="child"){
+      const ref=await addDoc(peopleCol, base(name,{parentId:P.id})); pendingFocusId=ref.id;
+    } else if(rel==="partner"){
+      if(P.spouseId) return;
+      const ref=await addDoc(peopleCol, base(name,{spouseOf:P.id}));
+      await updateDoc(doc(db,"people",P.id),{spouseId:ref.id,updatedAt:Date.now()}); pendingFocusId=ref.id;
+    } else if(rel==="brother"||rel==="sister"){
+      const ref=await addDoc(peopleCol, base(name,{parentId:P.parentId||null, sex:rel==="brother"?"male":"female"})); pendingFocusId=ref.id;
+    } else if(rel==="father"||rel==="mother"){
+      const sex=rel==="father"?"male":"female";
+      const A=P.parentId?state.people[P.parentId]:null;
+      if(!A){
+        const ref=await addDoc(peopleCol, base(name,{parentId:null, sex}));
+        await updateDoc(doc(db,"people",P.id),{parentId:ref.id,updatedAt:Date.now()}); pendingFocusId=ref.id;
+      } else if(!A.spouseId){
+        const ref=await addDoc(peopleCol, base(name,{spouseOf:A.id, sex}));
+        await updateDoc(doc(db,"people",A.id),{spouseId:ref.id,updatedAt:Date.now()}); pendingFocusId=ref.id;
+      } else { alert(`${P.name} already has both parents on the tree.`); }
+    }
+  }
   async function savePerson(){
-    const name=$("#pInput").value.trim();
-    if(!name) { $("#pInput").focus(); return; }
+    const name=$("#pInput").value.trim(); if(!name){ $("#pInput").focus(); return; }
     $("#personScrim").classList.remove("open");
-    const now=Date.now();
+    const op=pendingOp; pendingOp=null;
     try{
-      if(editingId){
-        await updateDoc(doc(db,"people",editingId),{ name:name.slice(0,60), editedBy:state.me, updatedAt:now });
-      } else {
-        await addDoc(peopleCol,{ name:name.slice(0,60), parentId:addParentId||null, addedBy:state.me, editedBy:null, createdAt:now, updatedAt:now });
-      }
+      if(op.mode==="edit") await updateDoc(doc(db,"people",op.id),{name:name.slice(0,60),editedBy:state.me,updatedAt:Date.now()});
+      else if(op.mode==="first"){ const ref=await addDoc(peopleCol, base(name,{parentId:null})); pendingFocusId=ref.id; }
+      else await createRelative(selRel, op.personId, name);
     }catch(e){ alert("Couldn't save — check your connection and Firestore rules.\n\n"+e.message); }
   }
   async function removePerson(id){
     const p=state.people[id]; if(!p) return;
-    const kids=Object.values(state.people).filter(x=>x.parentId===id);
-    const dest=(p.parentId && state.people[p.parentId])?`“${state.people[p.parentId].name}”`:"the top of the tree";
-    const msg=kids.length
-      ? `Remove “${p.name}”? Their ${kids.length} direct descendant(s) will move up to connect to ${dest}.`
-      : `Remove “${p.name}” from the tree?`;
-    if(!confirm(msg)) return;
     try{
       const batch=writeBatch(db);
-      kids.forEach(k=>batch.update(doc(db,"people",k.id),{ parentId:p.parentId||null }));
-      batch.delete(doc(db,"people",id));
+      if(p.spouseOf){
+        if(!confirm(`Remove “${p.name}”?`)) return;
+        if(state.people[p.spouseOf]) batch.update(doc(db,"people",p.spouseOf),{spouseId:null});
+        batch.delete(doc(db,"people",id));
+      } else {
+        const kids=Object.values(state.people).filter(x=>x.parentId===id);
+        const spouse=p.spouseId?state.people[p.spouseId]:null;
+        const dest=(p.parentId && state.people[p.parentId])?`“${state.people[p.parentId].name}”`:"the top of the tree";
+        let msg=kids.length?`Remove “${p.name}”? Their ${kids.length} direct descendant(s) will move up to connect to ${dest}.`:`Remove “${p.name}” from the tree?`;
+        if(spouse) msg+=`\n\nTheir spouse “${spouse.name}” will be removed too.`;
+        if(!confirm(msg)) return;
+        kids.forEach(k=>batch.update(doc(db,"people",k.id),{parentId:p.parentId||null}));
+        if(spouse) batch.delete(doc(db,"people",spouse.id));
+        batch.delete(doc(db,"people",id));
+      }
       await batch.commit();
     }catch(e){ alert("Couldn't remove — check your connection and Firestore rules.\n\n"+e.message); }
   }
 
-  /* ---- live sync ---- */
-  function startSync(){
-    onSnapshot(peopleCol, snap=>{
-      const people={};
-      snap.forEach(d=>{ people[d.id]={ id:d.id, ...d.data() }; });
-      state.people=people;
-      $("#pulse").classList.remove("off");
-      $("#liveLabel").textContent="Live — shared with everyone";
-      render();
-    }, err=>{
-      $("#pulse").classList.add("off");
-      $("#liveLabel").textContent="Connection problem — check Firestore rules";
-      console.error(err);
-    });
-  }
-
-  /* ---- wiring ---- */
-  $("#tree").addEventListener("click",e=>{
+  tree.addEventListener("click",e=>{
     const btn=e.target.closest("button[data-act]"); if(!btn) return;
     const id=btn.dataset.id, act=btn.dataset.act;
-    if(act==="add") openPerson({mode:"add",parentId:id});
+    if(act==="addrel") openPerson({mode:"relative",personId:id});
     else if(act==="edit") openPerson({mode:"edit",id});
     else if(act==="del") removePerson(id);
   });
@@ -375,18 +500,30 @@ const app = initializeApp(firebaseConfig);
   $("#pSave").addEventListener("click",savePerson);
   $("#pCancel").addEventListener("click",()=>$("#personScrim").classList.remove("open"));
   $("#pInput").addEventListener("keydown",e=>{ if(e.key==="Enter") savePerson(); });
-  document.querySelectorAll(".scrim").forEach(scrim=>{
-    scrim.addEventListener("mousedown",e=>{ if(e.target===scrim && scrim.id==="personScrim") scrim.classList.remove("open"); });
-  });
-  document.addEventListener("keydown",e=>{
-    if(e.key==="Escape"){ const ps=$("#personScrim"); if(ps.classList.contains("open")) ps.classList.remove("open"); }
-  });
+  document.querySelectorAll(".scrim").forEach(s=>s.addEventListener("mousedown",e=>{ if(e.target===s && s.id==="personScrim") s.classList.remove("open"); }));
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ const ps=$("#personScrim"); if(ps.classList.contains("open")) ps.classList.remove("open"); } });
 
-  /* ---- boot ---- */
+  /* ---------- live sync ---------- */
+  let fitted=false;
+  function startSync(){
+    onSnapshot(peopleCol,snap=>{
+      const people={}; snap.forEach(d=>{ people[d.id]={id:d.id,...d.data()}; });
+      state.people=people;
+      $("#pulse").classList.remove("off"); $("#liveLabel").textContent="Live — shared with everyone";
+      render();
+      requestAnimationFrame(()=>{
+        const n=Object.keys(state.people).length;
+        if(pendingFocusId && tree.querySelector(`.node[data-id="${CSS.escape(pendingFocusId)}"]`)){
+          if(n>0) fitted=true; focusNode(pendingFocusId,Math.max(scale,1)); pendingFocusId=null;
+        } else if(n===0){ fit(); fitted=false; }
+        else if(!fitted){ fit(); fitted=true; }
+      });
+      if(results.classList.contains("open")) runSearch();
+    },err=>{ $("#pulse").classList.add("off"); $("#liveLabel").textContent="Connection problem — check Firestore rules"; console.error(err); });
+  }
+
   state.me=lsGet("ft_me");
-  showIdentity();
-  render();
-  startSync();
+  showIdentity(); applyTransform(); render(); startSync();
   if(!state.me) openIdentity();
 </script>
 </body>
