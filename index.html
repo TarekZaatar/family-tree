@@ -188,18 +188,27 @@
     deleteDoc, doc, writeBatch
   } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-  /* ============================================================= */
-  /*  PASTE YOUR FIREBASE CONFIG HERE                              */
-  /* ============================================================= */
-  const firebaseConfig = {
-    apiKey:            "PASTE_YOUR_API_KEY",
-    authDomain:        "PASTE_YOUR_PROJECT.firebaseapp.com",
-    projectId:         "PASTE_YOUR_PROJECT_ID",
-    storageBucket:     "PASTE_YOUR_PROJECT.appspot.com",
-    messagingSenderId: "PASTE_YOUR_SENDER_ID",
-    appId:             "PASTE_YOUR_APP_ID"
-  };
-  /* ============================================================= */
+ // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBEp9AVytuGbHENBvGu46GxVvCwOn8WzQ0",
+  authDomain: "tz-family-tree.firebaseapp.com",
+  projectId: "tz-family-tree",
+  storageBucket: "tz-family-tree.firebasestorage.app",
+  messagingSenderId: "145887823131",
+  appId: "1:145887823131:web:4790085992977b87a6ffbe",
+  measurementId: "G-D1HF5LD8ZK"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
   const $ = s => document.querySelector(s);
   const state = { people:{}, me:"" };
