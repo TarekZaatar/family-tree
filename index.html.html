@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Family Tree — a shared record</title>
+
+<!-- ============================================================= -->
+<!--  SETUP  (do this once — takes ~5 minutes)                      -->
+<!--                                                                 -->
+<!--  1. Go to https://console.firebase.google.com and create a     -->
+<!--     free project (the "Spark" plan — no card needed).          -->
+<!--  2. Build > Firestore Database > Create database > Start in     -->
+<!--     production mode > pick a location.                          -->
+<!--  3. Project settings (gear icon) > scroll to "Your apps" >      -->
+<!--     click the </> web icon, register an app, and COPY the       -->
+<!--     firebaseConfig object it shows you.                         -->
+<!--  4. Paste your config over the placeholder below.               -->
+<!--  5. In Firestore > Rules, paste the rules from the chat and     -->
+<!--     click Publish. Then host the file (see chat for options).   -->
+<!-- ============================================================= -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#E9E5D6;--paper-card:#F6F3E9;--ink:#23302A;--ink-soft:#5C6B60;
+    --green:#3E5C45;--green-deep:#2C4231;--ochre:#A9722E;--branch:#B0A589;
+    --border:#D8D0BC;--danger:#9C4A3C;
+    --shadow:0 1px 0 rgba(35,48,42,.04), 0 8px 22px -16px rgba(35,48,42,.45);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Inter",system-ui,sans-serif;color:var(--ink);
+    background:radial-gradient(120% 90% at 50% -10%, #F1EEE2 0%, var(--paper) 55%, #E2DDCC 100%);
+    background-attachment:fixed;min-height:100vh;line-height:1.5;-webkit-font-smoothing:antialiased;
+  }
+  header{max-width:1100px;margin:0 auto;padding:34px 24px 8px;display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;justify-content:space-between}
+  .brand .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 6px;font-weight:600}
+  .brand h1{font-family:"Fraunces",serif;font-weight:500;font-size:clamp(30px,5vw,46px);margin:0;letter-spacing:-.01em;line-height:1.02}
+  .brand p{margin:8px 0 0;color:var(--ink-soft);max-width:46ch;font-size:14.5px}
+  .who{background:var(--paper-card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;min-width:210px;box-shadow:var(--shadow)}
+  .who .lab{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);font-weight:600}
+  .who .val{font-family:"Fraunces",serif;font-size:19px;margin-top:2px;display:flex;align-items:center;gap:8px}
+  .who .val .dot{width:8px;height:8px;border-radius:50%;background:var(--ochre);flex:none}
+  .who button.link{background:none;border:none;color:var(--green);font:inherit;font-size:12.5px;cursor:pointer;padding:0;margin-top:6px;text-decoration:underline;text-underline-offset:2px}
+  .toolbar{max-width:1100px;margin:14px auto 0;padding:0 24px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+  .stat{font-size:13px;color:var(--ink-soft)}
+  .stat b{color:var(--ink);font-weight:600}
+  .live{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-soft)}
+  .live .pulse{width:8px;height:8px;border-radius:50%;background:var(--green);position:relative}
+  .live .pulse.off{background:#C0987F}
+  .live .pulse::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1px solid var(--green);opacity:.5;animation:ping 2.4s ease-out infinite}
+  .live .pulse.off::after{display:none}
+  @keyframes ping{0%{transform:scale(.6);opacity:.6}100%{transform:scale(1.8);opacity:0}}
+  .canvas{max-width:1100px;margin:18px auto 60px;padding:8px 8px 40px;overflow-x:auto}
+  .tree{display:inline-block;min-width:100%;padding:24px 32px;text-align:center}
+  .tree ul{position:relative;padding-top:26px;margin:0;display:flex;justify-content:center;list-style:none}
+  .tree li{list-style:none;position:relative;padding:26px 10px 0;display:flex;flex-direction:column;align-items:center}
+  .tree li::before,.tree li::after{content:"";position:absolute;top:0;right:50%;border-top:2px solid var(--branch);width:50%;height:26px}
+  .tree li::after{right:auto;left:50%;border-left:2px solid var(--branch)}
+  .tree li:only-child::after,.tree li:only-child::before{display:none}
+  .tree li:only-child{padding-top:0}
+  .tree li:first-child::before,.tree li:last-child::after{border:0 none}
+  .tree li:last-child::before{border-right:2px solid var(--branch);border-radius:0 8px 0 0}
+  .tree li:first-child::after{border-radius:8px 0 0 0}
+  .tree ul ul::before{content:"";position:absolute;top:0;left:50%;border-left:2px solid var(--branch);width:0;height:26px}
+  .tree > ul > li::before,.tree > ul > li::after{display:none}
+  .tree > ul > li{padding-top:0}
+  .tree > ul{padding-top:0}
+  .node{position:relative;background:var(--paper-card);border:1px solid var(--border);border-radius:13px;padding:13px 15px 12px;min-width:150px;max-width:210px;box-shadow:var(--shadow);text-align:left;transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;animation:rise .4s ease both}
+  @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .node:hover{transform:translateY(-2px);border-color:#C9C0A8;box-shadow:0 1px 0 rgba(35,48,42,.05),0 16px 30px -20px rgba(35,48,42,.55)}
+  .node.mine{border-color:var(--ochre)}
+  .node.mine::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:3px;background:var(--ochre)}
+  .node .gen{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;margin-bottom:2px}
+  .node .name{font-family:"Fraunces",serif;font-size:19px;font-weight:500;line-height:1.15;word-break:break-word}
+  .node .meta{margin-top:5px;font-family:"Fraunces",serif;font-style:italic;font-size:12.5px;color:var(--ink-soft);line-height:1.35}
+  .node .meta .by{color:var(--ochre)}
+  .node .actions{display:flex;gap:4px;margin-top:11px;flex-wrap:wrap}
+  .node .actions button{font:inherit;font-size:11.5px;font-weight:500;cursor:pointer;border-radius:7px;border:1px solid var(--border);background:#fff;color:var(--ink);padding:4px 8px;line-height:1;transition:background .15s,color .15s,border-color .15s}
+  .node .actions button:hover{border-color:#BFB69E;background:#FBF9F2}
+  .node .actions button.add{background:var(--green);border-color:var(--green);color:#F4F2E8}
+  .node .actions button.add:hover{background:var(--green-deep);border-color:var(--green-deep)}
+  .node .actions button.del:hover{color:var(--danger);border-color:#D8B4AC}
+  .empty{max-width:520px;margin:30px auto;padding:40px 28px;text-align:center;background:var(--paper-card);border:1px dashed #CBC2AB;border-radius:18px}
+  .empty .seed{font-size:34px;line-height:1}
+  .empty h2{font-family:"Fraunces",serif;font-weight:500;font-size:24px;margin:14px 0 6px}
+  .empty p{color:var(--ink-soft);margin:0 auto 20px;max-width:38ch}
+  .btn{font:inherit;font-weight:600;font-size:14px;cursor:pointer;border-radius:11px;padding:11px 18px;border:1px solid var(--green);background:var(--green);color:#F4F2E8;box-shadow:var(--shadow);transition:background .15s,transform .1s}
+  .btn:hover{background:var(--green-deep)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:#fff;color:var(--ink);border-color:var(--border)}
+  .btn.ghost:hover{background:#FBF9F2}
+  .scrim{position:fixed;inset:0;background:rgba(35,48,42,.32);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+  .scrim.open{display:flex;animation:fade .18s ease}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .modal{background:var(--paper-card);border:1px solid var(--border);border-radius:18px;width:100%;max-width:440px;padding:24px 24px 22px;box-shadow:0 30px 60px -24px rgba(35,48,42,.6);animation:pop .22s cubic-bezier(.2,.8,.2,1)}
+  @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+  .modal .eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);font-weight:600}
+  .modal h3{font-family:"Fraunces",serif;font-weight:500;font-size:23px;margin:6px 0 4px}
+  .modal p.hint{margin:0 0 16px;color:var(--ink-soft);font-size:13.5px}
+  .modal label{display:block;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;margin-bottom:6px}
+  .modal input{width:100%;font:inherit;font-size:16px;padding:11px 13px;border-radius:11px;border:1px solid var(--border);background:#fff;color:var(--ink)}
+  .modal input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(62,92,69,.15)}
+  .modal .row{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+  .modal code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;background:#EFEBDD;border:1px solid var(--border);border-radius:6px;padding:1px 6px}
+  .modal ol{margin:0 0 4px;padding-left:18px;color:var(--ink);font-size:14px}
+  .modal ol li{margin:7px 0}
+  :focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:6px}
+  .footnote{max-width:1100px;margin:0 auto 50px;padding:0 24px;color:var(--ink-soft);font-size:12px;text-align:center}
+  @media (max-width:560px){header{padding-top:24px}.who{min-width:0;flex:1}}
+  @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <p class="eyebrow">A shared family record</p>
+      <h1>The Family Tree</h1>
+      <p>Add the people in your family. Every name keeps a note of who added it — and the tree updates live for everyone who opens this page.</p>
+    </div>
+    <div class="who" id="whoCard" hidden>
+      <div class="lab">You're adding as</div>
+      <div class="val"><span class="dot"></span><span id="whoName">—</span></div>
+      <button class="link" id="changeName">Change name</button>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="stat"><b id="countNum">0</b> people on the tree</div>
+    <div class="live"><span class="pulse off" id="pulse"></span><span id="liveLabel">Connecting…</span></div>
+  </div>
+
+  <main class="canvas" id="canvas"><div class="tree" id="tree"></div></main>
+
+  <p class="footnote">Anyone who opens this page can add, edit, or remove names, and everyone sees the same tree. Please be kind to the record.</p>
+
+  <!-- Identity modal -->
+  <div class="scrim" id="idScrim" role="dialog" aria-modal="true" aria-labelledby="idTitle">
+    <div class="modal">
+      <p class="eyebrow">Before you begin</p>
+      <h3 id="idTitle">What should we call you?</h3>
+      <p class="hint">Your name is shown beside every person you add, so the rest of the family knows who contributed.</p>
+      <label for="idInput">Your name</label>
+      <input id="idInput" type="text" maxlength="40" placeholder="e.g. Grandma Rosa" autocomplete="name" />
+      <div class="row"><button class="btn" id="idSave">Save</button></div>
+    </div>
+  </div>
+
+  <!-- Add / edit person modal -->
+  <div class="scrim" id="personScrim" role="dialog" aria-modal="true" aria-labelledby="pTitle">
+    <div class="modal">
+      <p class="eyebrow" id="pEyebrow">New person</p>
+      <h3 id="pTitle">Add a name</h3>
+      <p class="hint" id="pHint"></p>
+      <label for="pInput">Full name</label>
+      <input id="pInput" type="text" maxlength="60" placeholder="e.g. Maria Santos" />
+      <div class="row">
+        <button class="btn ghost" id="pCancel">Cancel</button>
+        <button class="btn" id="pSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Setup needed modal -->
+  <div class="scrim" id="setupScrim" role="dialog" aria-modal="true" aria-labelledby="sTitle">
+    <div class="modal">
+      <p class="eyebrow">One step left</p>
+      <h3 id="sTitle">Connect your Firebase project</h3>
+      <p class="hint">This page is ready, but it needs a free Firebase database to store and share the tree.</p>
+      <ol>
+        <li>Create a free project at <code>console.firebase.google.com</code></li>
+        <li>Add a <b>Firestore Database</b> (production mode)</li>
+        <li>Register a <b>Web app</b> and copy its <code>firebaseConfig</code></li>
+        <li>Paste that config into this file, near the top of the script, then reload</li>
+      </ol>
+      <p class="hint" style="margin-top:14px">Full instructions and the security rules are in the message that came with this file.</p>
+    </div>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+  import {
+    getFirestore, collection, onSnapshot, addDoc, updateDoc,
+    deleteDoc, doc, writeBatch
+  } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+  /* ============================================================= */
+  /*  PASTE YOUR FIREBASE CONFIG HERE                              */
+  /* ============================================================= */
+  const firebaseConfig = {
+    apiKey:            "PASTE_YOUR_API_KEY",
+    authDomain:        "PASTE_YOUR_PROJECT.firebaseapp.com",
+    projectId:         "PASTE_YOUR_PROJECT_ID",
+    storageBucket:     "PASTE_YOUR_PROJECT.appspot.com",
+    messagingSenderId: "PASTE_YOUR_SENDER_ID",
+    appId:             "PASTE_YOUR_APP_ID"
+  };
+  /* ============================================================= */
+
+  const $ = s => document.querySelector(s);
+  const state = { people:{}, me:"" };
+
+  /* ---- utils ---- */
+  function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  const ROMAN=["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"];
+  const roman=n=>ROMAN[n]||String(n);
+  function lsGet(k){ try{ return localStorage.getItem(k)||""; }catch(e){ return ""; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+  /* ---- not configured yet? show setup, stop ---- */
+  if(firebaseConfig.projectId.startsWith("PASTE_")){
+    $("#setupScrim").classList.add("open");
+    $("#liveLabel").textContent = "Not connected — needs setup";
+    renderEmptyHint();
+    throw new Error("Firebase not configured");
+  }
+
+  /* ---- init firebase ---- */
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const peopleCol = collection(db, "people");
+
+  /* ---- tree building & rendering ---- */
+  function childrenMap(people){
+    const map={};
+    Object.values(people).forEach(p=>{
+      const pid=(p.parentId && people[p.parentId])?p.parentId:"__root__";
+      (map[pid]=map[pid]||[]).push(p);
+    });
+    Object.values(map).forEach(a=>a.sort((x,y)=>(x.createdAt||0)-(y.createdAt||0)));
+    return map;
+  }
+  function metaLine(p){
+    const added=`added by <span class="by">${esc(p.addedBy||"someone")}</span>`;
+    const wasEdited=p.editedBy && (p.editedBy!==p.addedBy || (p.updatedAt && p.updatedAt!==p.createdAt));
+    return added + (wasEdited?` · edited by <span class="by">${esc(p.editedBy)}</span>`:"");
+  }
+  function nodeCard(p,gen){
+    const mine=state.me && (p.editedBy===state.me || p.addedBy===state.me);
+    return `<div class="node ${mine?'mine':''}" data-id="${p.id}">
+      <div class="gen">Generation ${roman(gen)}</div>
+      <div class="name">${esc(p.name)}</div>
+      <div class="meta">${metaLine(p)}</div>
+      <div class="actions">
+        <button class="add" data-act="add" data-id="${p.id}">+ Add child</button>
+        <button data-act="edit" data-id="${p.id}">Edit</button>
+        <button class="del" data-act="del" data-id="${p.id}">Remove</button>
+      </div></div>`;
+  }
+  function renderNode(p,map,gen){
+    const kids=map[p.id]||[];
+    const kidsHtml=kids.length?`<ul>${kids.map(k=>renderNode(k,map,gen+1)).join("")}</ul>`:"";
+    return `<li>${nodeCard(p,gen)}${kidsHtml}</li>`;
+  }
+  function renderEmptyHint(){
+    $("#tree").innerHTML = `<div class="empty"><div class="seed">🌱</div>
+      <h2>Plant the first person</h2>
+      <p>Start with whoever you'd like at the top of the tree — a grandparent, an ancestor, or yourself.</p>
+      <button class="btn" id="addRoot">Add the first person</button></div>`;
+    const b=$("#addRoot"); if(b) b.addEventListener("click",()=>openPerson({mode:"add",parentId:null}));
+  }
+  function render(){
+    const people=state.people, count=Object.keys(people).length;
+    $("#countNum").textContent=count;
+    if(count===0){ renderEmptyHint(); return; }
+    const map=childrenMap(people);
+    const roots=map["__root__"]||[];
+    $("#tree").innerHTML=`<ul>${roots.map(r=>renderNode(r,map,1)).join("")}</ul>`;
+  }
+
+  /* ---- identity ---- */
+  function showIdentity(){
+    const card=$("#whoCard");
+    if(state.me){ card.hidden=false; $("#whoName").textContent=state.me; } else card.hidden=true;
+  }
+  function openIdentity(){
+    $("#idInput").value=state.me||"";
+    $("#idScrim").classList.add("open");
+    setTimeout(()=>$("#idInput").focus(),50);
+  }
+  function saveIdentity(){
+    const v=$("#idInput").value.trim();
+    if(!v){ $("#idInput").focus(); return; }
+    state.me=v.slice(0,40); lsSet("ft_me",state.me);
+    showIdentity(); $("#idScrim").classList.remove("open");
+    if(pendingAdd){ const pa=pendingAdd; pendingAdd=null; openPerson(pa); }
+    render();
+  }
+
+  /* ---- add / edit ---- */
+  let editingId=null, addParentId=null, pendingAdd=null;
+  function openPerson(opts){
+    if(!state.me){ pendingAdd=opts; openIdentity(); return; }
+    if(opts.mode==="edit"){
+      const p=state.people[opts.id]; editingId=opts.id; addParentId=null;
+      $("#pEyebrow").textContent="Edit"; $("#pTitle").textContent="Edit this name";
+      $("#pHint").textContent="Your name will be recorded as the last person to edit it.";
+      $("#pInput").value=p?p.name:"";
+    } else {
+      editingId=null; addParentId=opts.parentId;
+      const parent=opts.parentId?state.people[opts.parentId]:null;
+      $("#pEyebrow").textContent=parent?"New person":"First person";
+      $("#pTitle").textContent=parent?`Add a child of ${parent.name}`:"Add the first person";
+      $("#pHint").textContent=parent?"":"This person sits at the top of the tree.";
+      $("#pInput").value="";
+    }
+    $("#personScrim").classList.add("open");
+    setTimeout(()=>{const i=$("#pInput");i.focus();i.select();},50);
+  }
+  async function savePerson(){
+    const name=$("#pInput").value.trim();
+    if(!name) { $("#pInput").focus(); return; }
+    $("#personScrim").classList.remove("open");
+    const now=Date.now();
+    try{
+      if(editingId){
+        await updateDoc(doc(db,"people",editingId),{ name:name.slice(0,60), editedBy:state.me, updatedAt:now });
+      } else {
+        await addDoc(peopleCol,{ name:name.slice(0,60), parentId:addParentId||null, addedBy:state.me, editedBy:null, createdAt:now, updatedAt:now });
+      }
+    }catch(e){ alert("Couldn't save — check your connection and Firestore rules.\n\n"+e.message); }
+  }
+  async function removePerson(id){
+    const p=state.people[id]; if(!p) return;
+    const kids=Object.values(state.people).filter(x=>x.parentId===id);
+    const dest=(p.parentId && state.people[p.parentId])?`“${state.people[p.parentId].name}”`:"the top of the tree";
+    const msg=kids.length
+      ? `Remove “${p.name}”? Their ${kids.length} direct descendant(s) will move up to connect to ${dest}.`
+      : `Remove “${p.name}” from the tree?`;
+    if(!confirm(msg)) return;
+    try{
+      const batch=writeBatch(db);
+      kids.forEach(k=>batch.update(doc(db,"people",k.id),{ parentId:p.parentId||null }));
+      batch.delete(doc(db,"people",id));
+      await batch.commit();
+    }catch(e){ alert("Couldn't remove — check your connection and Firestore rules.\n\n"+e.message); }
+  }
+
+  /* ---- live sync ---- */
+  function startSync(){
+    onSnapshot(peopleCol, snap=>{
+      const people={};
+      snap.forEach(d=>{ people[d.id]={ id:d.id, ...d.data() }; });
+      state.people=people;
+      $("#pulse").classList.remove("off");
+      $("#liveLabel").textContent="Live — shared with everyone";
+      render();
+    }, err=>{
+      $("#pulse").classList.add("off");
+      $("#liveLabel").textContent="Connection problem — check Firestore rules";
+      console.error(err);
+    });
+  }
+
+  /* ---- wiring ---- */
+  $("#tree").addEventListener("click",e=>{
+    const btn=e.target.closest("button[data-act]"); if(!btn) return;
+    const id=btn.dataset.id, act=btn.dataset.act;
+    if(act==="add") openPerson({mode:"add",parentId:id});
+    else if(act==="edit") openPerson({mode:"edit",id});
+    else if(act==="del") removePerson(id);
+  });
+  $("#changeName").addEventListener("click",openIdentity);
+  $("#idSave").addEventListener("click",saveIdentity);
+  $("#idInput").addEventListener("keydown",e=>{ if(e.key==="Enter") saveIdentity(); });
+  $("#pSave").addEventListener("click",savePerson);
+  $("#pCancel").addEventListener("click",()=>$("#personScrim").classList.remove("open"));
+  $("#pInput").addEventListener("keydown",e=>{ if(e.key==="Enter") savePerson(); });
+  document.querySelectorAll(".scrim").forEach(scrim=>{
+    scrim.addEventListener("mousedown",e=>{ if(e.target===scrim && scrim.id==="personScrim") scrim.classList.remove("open"); });
+  });
+  document.addEventListener("keydown",e=>{
+    if(e.key==="Escape"){ const ps=$("#personScrim"); if(ps.classList.contains("open")) ps.classList.remove("open"); }
+  });
+
+  /* ---- boot ---- */
+  state.me=lsGet("ft_me");
+  showIdentity();
+  render();
+  startSync();
+  if(!state.me) openIdentity();
+</script>
+</body>
+</html>
