@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>The Family Tree — a shared record</title>
+<title>Zaatar Family Tree — a shared record</title>
 
 <!-- Paste your Firebase config in the marked spot in the script (same object as before). -->
 
@@ -23,7 +23,7 @@
   header{max-width:1180px;margin:0 auto;padding:30px 24px 6px;display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;justify-content:space-between}
   .brand .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 6px;font-weight:600}
   .brand h1{font-family:"Fraunces",serif;font-weight:500;font-size:clamp(28px,4.6vw,42px);margin:0;letter-spacing:-.01em;line-height:1.02}
-  .brand p{margin:7px 0 0;color:var(--ink-soft);max-width:50ch;font-size:14px}
+  .brand p{margin:7px 0 0;color:var(--ink-soft);max-width:52ch;font-size:14px}
   .who{background:var(--paper-card);border:1px solid var(--border);border-radius:12px;padding:11px 14px;min-width:200px;box-shadow:var(--shadow)}
   .who .lab{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);font-weight:600}
   .who .val{font-family:"Fraunces",serif;font-size:18px;margin-top:2px;display:flex;align-items:center;gap:8px}
@@ -35,7 +35,7 @@
   .search .ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink-soft);font-size:15px;pointer-events:none}
   .search input{width:100%;font:inherit;font-size:14px;padding:10px 12px 10px 34px;border-radius:11px;border:1px solid var(--border);background:var(--paper-card);color:var(--ink);box-shadow:var(--shadow)}
   .search input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(62,92,69,.15)}
-  .results{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--paper-card);border:1px solid var(--border);border-radius:12px;box-shadow:0 22px 44px -22px rgba(35,48,42,.6);overflow:hidden;display:none;z-index:30;max-height:320px;overflow-y:auto}
+  .results{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--paper-card);border:1px solid var(--border);border-radius:12px;box-shadow:0 22px 44px -22px rgba(35,48,42,.6);overflow:hidden;display:none;z-index:60;max-height:300px;overflow-y:auto}
   .results.open{display:block}
   .results .res{display:flex;justify-content:space-between;align-items:baseline;gap:10px;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid #ECE7D8;font:inherit;padding:10px 13px;cursor:pointer;color:var(--ink)}
   .results .res:last-child{border-bottom:none}
@@ -54,6 +54,16 @@
   .live .pulse::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1px solid var(--green);opacity:.5;animation:ping 2.4s ease-out infinite}
   .live .pulse.off::after{display:none}
   @keyframes ping{0%{transform:scale(.6);opacity:.6}100%{transform:scale(1.8);opacity:0}}
+  .csel{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-soft);font-weight:500}
+  .csel select{font:inherit;font-size:12.5px;padding:6px 9px;border-radius:9px;border:1px solid var(--border);background:var(--paper-card);color:var(--ink);box-shadow:var(--shadow);cursor:pointer}
+
+  .legendwrap{max-width:1180px;margin:10px auto 0;padding:0 24px}
+  .legend{display:none;flex-wrap:wrap;gap:7px}
+  .legend.show{display:flex}
+  .legend .lg{display:inline-flex;align-items:center;gap:7px;font:inherit;font-size:12px;color:var(--ink);background:var(--paper-card);border:1px solid var(--border);border-radius:999px;padding:5px 11px 5px 7px;cursor:default;box-shadow:var(--shadow)}
+  .legend .lg[data-id]{cursor:pointer}
+  .legend .lg[data-id]:hover{background:#FBF9F2;border-color:#BFB69E}
+  .legend .sw{width:13px;height:13px;border-radius:50%;flex:none;border:1px solid rgba(0,0,0,.14)}
 
   .canvas{max-width:1180px;margin:14px auto 28px;padding:0 24px}
   .viewport{position:relative;height:74vh;min-height:430px;border:1px solid var(--border);border-radius:16px;overflow:hidden;cursor:grab;touch-action:none;
@@ -125,7 +135,7 @@
   .scrim{position:fixed;inset:0;background:rgba(35,48,42,.32);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
   .scrim.open{display:flex;animation:fade .18s ease}
   @keyframes fade{from{opacity:0}to{opacity:1}}
-  .modal{background:var(--paper-card);border:1px solid var(--border);border-radius:18px;width:100%;max-width:460px;padding:24px;box-shadow:0 30px 60px -24px rgba(35,48,42,.6);animation:pop .22s cubic-bezier(.2,.8,.2,1)}
+  .modal{background:var(--paper-card);border:1px solid var(--border);border-radius:18px;width:100%;max-width:460px;padding:24px;box-shadow:0 30px 60px -24px rgba(35,48,42,.6);animation:pop .22s cubic-bezier(.2,.8,.2,1);max-height:90vh;overflow-y:auto}
   @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
   .modal .eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);font-weight:600}
   .modal h3{font-family:"Fraunces",serif;font-weight:500;font-size:23px;margin:6px 0 4px}
@@ -139,6 +149,11 @@
   .modal input{width:100%;font:inherit;font-size:16px;padding:11px 13px;border-radius:11px;border:1px solid var(--border);background:#fff;color:var(--ink)}
   .modal input:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(62,92,69,.15)}
   .modal .row{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+  .editblock{margin-top:18px;padding-top:16px;border-top:1px solid #E4DECE}
+  .linkpick{position:relative}
+  .linkpick input{font-size:14px}
+  .chosen{margin-top:8px;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);background:#EFEBDD;border:1px solid var(--border);border-radius:9px;padding:8px 11px}
+  .chosen button{margin-left:auto;background:none;border:none;color:var(--danger);cursor:pointer;font:inherit;font-size:12px;text-decoration:underline}
   :focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:6px}
   .footnote{max-width:1180px;margin:0 auto 50px;padding:0 24px;color:var(--ink-soft);font-size:12px;text-align:center}
   @media (max-width:560px){header{padding-top:22px}.who{min-width:0}}
@@ -150,7 +165,7 @@
     <div class="brand">
       <p class="eyebrow">A shared family record</p>
       <h1>The Family Tree</h1>
-      <p>Add anyone's parents, children, siblings, or partner. A spouse with their own family becomes a linked branch — tap the ⚭ chip to jump between them. Collapse branches and reorder siblings as it grows.</p>
+      <p>Build families in every direction, link them through marriages and shared siblings, and edit who's who. Collapse branches and reorder siblings as it grows.</p>
     </div>
     <div class="who" id="whoCard" hidden>
       <div class="lab">You're adding as</div>
@@ -214,6 +229,22 @@
       <p class="hint2" id="pHint"></p>
       <label for="pInput">Full name</label>
       <input id="pInput" type="text" maxlength="60" placeholder="e.g. Maria Santos" />
+
+      <div class="editblock" id="editExtra" style="display:none">
+        <label>Sex</label>
+        <div class="rel-row" id="sexRow">
+          <button type="button" data-sex="">Unspecified</button>
+          <button type="button" data-sex="male">♂ Male</button>
+          <button type="button" data-sex="female">♀ Female</button>
+        </div>
+        <label>Make sibling of (optional)</label>
+        <div class="linkpick">
+          <input id="linkInput" type="text" placeholder="Search a person to link as their sibling…" autocomplete="off" />
+          <div class="results" id="linkResults"></div>
+        </div>
+        <div class="chosen" id="linkChosen" hidden></div>
+      </div>
+
       <div class="row">
         <button class="btn ghost" id="pCancel">Cancel</button>
         <button class="btn" id="pSave">Save</button>
@@ -233,7 +264,6 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
   import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, writeBatch }
     from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
-
  // Import the functions you need from the SDKs you need
 
 
@@ -270,10 +300,9 @@ const $ = s => document.querySelector(s);
   const db=getFirestore(app);
   const peopleCol=collection(db,"people");
 
-  /* relationship helpers */
   const partnerOf=p=>p.spouseId||p.spouseOf||p.inlineWith||null;
   const isInline=p=>!p.parentId && (p.inlineWith||p.spouseOf);
-  const ord=p=>(p.order ?? p.createdAt ?? 0);
+  const ordv=p=>(p.order ?? p.createdAt ?? 0);
 
   /* ---------- pan / zoom ---------- */
   const MIN=0.12, MAX=3;
@@ -324,11 +353,11 @@ const $ = s => document.querySelector(s);
   let hintTimer=setTimeout(hideHint,6000);
   function hideHint(){ const h=$("#hint"); if(h) h.classList.add("gone"); clearTimeout(hintTimer); }
 
-  /* ---------- collapse state (local, per-user) ---------- */
+  /* ---------- collapse (local) ---------- */
   let collapsedSet=new Set(JSON.parse(lsGet("ft_collapsed")||"[]"));
   function saveCollapsed(){ lsSet("ft_collapsed",JSON.stringify([...collapsedSet])); }
 
-  /* ---------- tree model & render ---------- */
+  /* ---------- model & render ---------- */
   function childrenMap(people){
     const map={};
     Object.values(people).forEach(p=>{
@@ -337,10 +366,10 @@ const $ = s => document.querySelector(s);
       const pid=(parent && !isInline(parent))?p.parentId:"__root__";
       (map[pid]=map[pid]||[]).push(p);
     });
-    Object.values(map).forEach(a=>a.sort((x,y)=>ord(x)-ord(y)));
+    Object.values(map).forEach(a=>a.sort((x,y)=>ordv(x)-ordv(y)));
     return map;
   }
-  function descCount(id,map){ const kids=map[id]||[]; let c=kids.length; for(const k of kids) c+=descCount(k.id,map); return c; }
+  function descCount(id,map,seen){ if(seen.has(id)) return 0; seen.add(id); const kids=map[id]||[]; let c=kids.length; for(const k of kids) c+=descCount(k.id,map,seen); return c; }
   function metaLine(p){
     const added=`added by <span class="by">${esc(p.addedBy||"someone")}</span>`;
     const wasEdited=p.editedBy && (p.editedBy!==p.addedBy || (p.updatedAt && p.updatedAt!==p.createdAt));
@@ -369,12 +398,13 @@ const $ = s => document.querySelector(s);
     const toggle=hasKids?`<button class="toggle" data-act="toggle" data-id="${p.id}">${collapsed?("▸ "+desc):"▾"}</button>`:"";
     return `<div class="unit"><div class="gen">Generation ${roman(gen)}</div><div class="couple">${inner}</div>${toggle}</div>`;
   }
-  function renderNode(p,map,people,gen,idx,total){
+  function renderNode(p,map,people,gen,idx,total,seen){
+    if(seen.has(p.id)) return ""; seen.add(p.id);
     const kids=map[p.id]||[];
     const has=kids.length>0;
     const collapsed=has && collapsedSet.has(p.id);
-    const desc=has?descCount(p.id,map):0;
-    const kidsHtml=(has && !collapsed)?`<ul>${kids.map((k,i)=>renderNode(k,map,people,gen+1,i,kids.length)).join("")}</ul>`:"";
+    const desc=has?descCount(p.id,map,new Set()):0;
+    const kidsHtml=(has && !collapsed)?`<ul>${kids.map((k,i)=>renderNode(k,map,people,gen+1,i,kids.length,seen)).join("")}</ul>`:"";
     return `<li>${unit(p,people,gen,idx,total,has,collapsed,desc)}${kidsHtml}</li>`;
   }
   function render(){
@@ -385,18 +415,17 @@ const $ = s => document.querySelector(s);
       const b=$("#addRoot"); if(b) b.addEventListener("click",()=>openPerson({mode:"first"}));
       return;
     }
-    const map=childrenMap(people), roots=map["__root__"]||[];
-    tree.innerHTML=`<ul>${roots.map((r,i)=>renderNode(r,map,people,1,i,roots.length)).join("")}</ul>`;
+    const map=childrenMap(people), roots=map["__root__"]||[], seen=new Set();
+    tree.innerHTML=`<ul>${roots.map((r,i)=>renderNode(r,map,people,1,i,roots.length,seen)).join("")}</ul>`;
   }
 
   function collapseAll(){ const map=childrenMap(state.people); collapsedSet=new Set(Object.keys(map).filter(k=>k!=="__root__" && (map[k]||[]).length)); saveCollapsed(); render(); fit(); }
   function expandAll(){ collapsedSet=new Set(); saveCollapsed(); render(); fit(); }
   $("#collapseAll").addEventListener("click",collapseAll);
   $("#expandAll").addEventListener("click",expandAll);
-
   function ensureVisible(id){
     let start=state.people[id]; if(!start) return;
-    let cur = isInline(start) ? state.people[partnerOf(start)] : start;
+    let cur=isInline(start)?state.people[partnerOf(start)]:start;
     const guard=new Set();
     while(cur && cur.parentId && !guard.has(cur.id)){ guard.add(cur.id); collapsedSet.delete(cur.parentId); cur=state.people[cur.parentId]; }
     saveCollapsed(); render();
@@ -422,7 +451,7 @@ const $ = s => document.querySelector(s);
   function goTo(id){ results.classList.remove("open"); searchInput.value=state.people[id]?.name||""; ensureVisible(id); requestAnimationFrame(()=>focusNode(id,Math.max(scale,1))); }
   searchInput.addEventListener("input",runSearch);
   searchInput.addEventListener("focus",runSearch);
-  searchInput.addEventListener("keydown",e=>{ if(e.key==="Enter"){ const first=results.querySelector(".res"); if(first) goTo(first.dataset.id); } else if(e.key==="Escape"){ results.classList.remove("open"); searchInput.blur(); } });
+  searchInput.addEventListener("keydown",e=>{ if(e.key==="Enter"){ const f=results.querySelector(".res"); if(f) goTo(f.dataset.id); } else if(e.key==="Escape"){ results.classList.remove("open"); searchInput.blur(); } });
   results.addEventListener("click",e=>{ const b=e.target.closest(".res"); if(b) goTo(b.dataset.id); });
   document.addEventListener("click",e=>{ if(!e.target.closest(".search")) results.classList.remove("open"); });
 
@@ -436,33 +465,64 @@ const $ = s => document.querySelector(s);
     render();
   }
 
-  /* ---------- add / edit relatives ---------- */
-  let pendingOp=null, pendingAfterName=null, selRel="child", pendingFocusId=null;
+  /* ---------- structural helpers ---------- */
+  function base(name,extra){ const t=Date.now(); return Object.assign({name:name.slice(0,60),parentId:null,addedBy:state.me,editedBy:null,createdAt:t,updatedAt:t,order:t},extra); }
+  function wouldCycle(personId,newParentId){ let cur=newParentId,g=0; while(cur && g++<10000){ if(cur===personId) return true; cur=state.people[cur]?.parentId; } return false; }
+  // returns a usable parent id for `personId`, creating a shared "Unknown" parent (and detaching from inline) if there's none
+  async function ensureParent(personId){
+    const p=state.people[personId];
+    if(p.parentId && state.people[p.parentId] && !isInline(state.people[p.parentId])) return p.parentId;
+    const ref=await addDoc(peopleCol, base("Unknown",{parentId:null}));
+    const upd={parentId:ref.id, updatedAt:Date.now()};
+    if(isInline(p)){ upd.inlineWith=null; upd.spouseOf=null; const pr=partnerOf(p); if(pr) upd.spouseId=pr; }
+    await updateDoc(doc(db,"people",personId), upd);
+    if(isInline(p)){ const pr=partnerOf(p); if(pr && state.people[pr] && state.people[pr].spouseId!==personId) await updateDoc(doc(db,"people",pr),{spouseId:personId}); }
+    return ref.id;
+  }
+  async function makeSiblingOf(personId,targetId){
+    if(personId===targetId) return;
+    if(!state.people[targetId]) return;
+    const sharedParentId=await ensureParent(targetId);
+    if(wouldCycle(personId,sharedParentId)){ alert("That link would create a loop in the tree."); return; }
+    const person=state.people[personId];
+    const upd={parentId:sharedParentId, order:Date.now(), updatedAt:Date.now()};
+    if(isInline(person)){ upd.inlineWith=null; upd.spouseOf=null; const pr=partnerOf(person); if(pr) upd.spouseId=pr; }
+    await updateDoc(doc(db,"people",personId), upd);
+    if(isInline(person)){ const pr=partnerOf(person); if(pr && state.people[pr] && state.people[pr].spouseId!==personId) await updateDoc(doc(db,"people",pr),{spouseId:personId}); }
+  }
+
+  /* ---------- add / edit ---------- */
+  let pendingOp=null, pendingAfterName=null, selRel="child", pendingFocusId=null, selSex="", linkTargetId=null;
   const REL_HINT={
     father:p=>`Adds ${p.name}'s father in the generation above.`,
     mother:p=>`Adds ${p.name}'s mother in the generation above.`,
-    brother:p=>`Adds a brother beside ${p.name}.`,
-    sister:p=>`Adds a sister beside ${p.name}.`,
+    brother:p=>`Adds a brother — siblings share a parent (created if needed).`,
+    sister:p=>`Adds a sister — siblings share a parent (created if needed).`,
     child:p=>`Adds a child below ${p.name}.`,
     partner:p=>`Adds ${p.name}'s partner.`
   };
   function relDisabled(r,hasBoth,partnerAvail){ if(r==="father"||r==="mother") return hasBoth; if(r==="partner") return !partnerAvail; return false; }
   function setPill(r){ selRel=r; $("#relRow").querySelectorAll("button").forEach(b=>b.classList.toggle("sel",b.dataset.rel===r)); }
+  function setSexPill(s){ selSex=s||""; $("#sexRow").querySelectorAll("button").forEach(b=>b.classList.toggle("sel",(b.dataset.sex||"")===selSex)); }
   function updateRelHint(){ const P=state.people[pendingOp?.personId]; if(P && REL_HINT[selRel]) $("#pHint").textContent=REL_HINT[selRel](P); }
+  function clearLinkChoice(){ linkTargetId=null; const ch=$("#linkChosen"); ch.hidden=true; ch.innerHTML=""; $("#linkInput").value=""; $("#linkResults").classList.remove("open"); }
   function openPerson(opts){
     if(!state.me){ pendingAfterName=opts; openIdentity(); return; }
     pendingOp=opts;
-    const relRow=$("#relRow");
+    const relRow=$("#relRow"), editExtra=$("#editExtra");
+    clearLinkChoice();
     if(opts.mode==="edit"){
-      relRow.style.display="none";
+      relRow.style.display="none"; editExtra.style.display="block";
       const p=state.people[opts.id];
-      $("#pEyebrow").textContent="Edit"; $("#pTitle").textContent="Edit this name";
-      $("#pHint").textContent="Your name will be recorded as the last person to edit it."; $("#pInput").value=p?p.name:"";
+      $("#pEyebrow").textContent="Edit"; $("#pTitle").textContent=`Edit ${p?p.name:"name"}`;
+      $("#pHint").textContent="Update the name, sex, or link this person as someone's sibling.";
+      $("#pInput").value=p?p.name:""; setSexPill(p?.sex||"");
     } else if(opts.mode==="first"){
-      relRow.style.display="none";
+      relRow.style.display="none"; editExtra.style.display="none";
       $("#pEyebrow").textContent="First person"; $("#pTitle").textContent="Add the first person";
       $("#pHint").textContent="This person sits at the top to start. Add their parents later to grow upward."; $("#pInput").value="";
     } else {
+      editExtra.style.display="none";
       const P=state.people[opts.personId];
       const A=P.parentId?state.people[P.parentId]:null;
       const hasBoth=!!(A && partnerOf(A)), partnerAvail=!partnerOf(P);
@@ -476,8 +536,28 @@ const $ = s => document.querySelector(s);
     $("#personScrim").classList.add("open"); setTimeout(()=>{const i=$("#pInput");i.focus();i.select();},50);
   }
   $("#relRow").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||b.disabled) return; setPill(b.dataset.rel); updateRelHint(); $("#pInput").focus(); });
+  $("#sexRow").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b) return; setSexPill(b.dataset.sex||""); });
 
-  function base(name,extra){ const t=Date.now(); return Object.assign({name:name.slice(0,60),parentId:null,addedBy:state.me,editedBy:null,createdAt:t,updatedAt:t,order:t},extra); }
+  // sibling-link picker (inside Edit)
+  function runLinkSearch(){
+    const q=$("#linkInput").value.trim().toLowerCase(); const lr=$("#linkResults"); const self=pendingOp?.id;
+    if(!q){ lr.classList.remove("open"); lr.innerHTML=""; return; }
+    const matches=Object.values(state.people).filter(p=>p.id!==self && (p.name||"").toLowerCase().includes(q)).slice(0,8);
+    if(!matches.length){ lr.innerHTML=`<div class="nohit">No match</div>`; lr.classList.add("open"); return; }
+    lr.innerHTML=matches.map(p=>`<button class="res" data-id="${p.id}"><span class="nm">${esc(p.name)}</span><span class="rel">${esc(relLabel(p))}</span></button>`).join("");
+    lr.classList.add("open");
+  }
+  $("#linkInput").addEventListener("input",runLinkSearch);
+  $("#linkInput").addEventListener("focus",runLinkSearch);
+  $("#linkResults").addEventListener("click",e=>{
+    const b=e.target.closest(".res"); if(!b) return;
+    linkTargetId=b.dataset.id; const t=state.people[linkTargetId];
+    $("#linkInput").value=""; $("#linkResults").classList.remove("open");
+    const ch=$("#linkChosen"); ch.hidden=false;
+    ch.innerHTML=`Will become a sibling of <b style="margin-left:3px">${esc(t.name)}</b><button type="button" id="linkClear">clear</button>`;
+    $("#linkClear").addEventListener("click",clearLinkChoice);
+  });
+
   async function createRelative(rel,personId,name){
     const P=state.people[personId]; if(!P) return; const t=Date.now();
     if(rel==="child"){
@@ -488,7 +568,8 @@ const $ = s => document.querySelector(s);
       const ref=await addDoc(peopleCol, base(name,{spouseId:P.id, inlineWith:P.id}));
       await updateDoc(doc(db,"people",P.id),{spouseId:ref.id,updatedAt:t}); pendingFocusId=ref.id;
     } else if(rel==="brother"||rel==="sister"){
-      const ref=await addDoc(peopleCol, base(name,{parentId:P.parentId||null, sex:rel==="brother"?"male":"female"})); pendingFocusId=ref.id;
+      const pid=await ensureParent(P.id);
+      const ref=await addDoc(peopleCol, base(name,{parentId:pid, sex:rel==="brother"?"male":"female"})); pendingFocusId=ref.id;
     } else if(rel==="father"||rel==="mother"){
       const sex=rel==="father"?"male":"female";
       const A=P.parentId?state.people[P.parentId]:null;
@@ -497,8 +578,7 @@ const $ = s => document.querySelector(s);
         const upd={parentId:ref.id, updatedAt:t};
         if(isInline(P)){ upd.inlineWith=null; upd.spouseOf=null; const pr=partnerOf(P); if(pr) upd.spouseId=pr; }
         await updateDoc(doc(db,"people",P.id), upd);
-        const pr=partnerOf(P);
-        if(pr && state.people[pr] && state.people[pr].spouseId!==P.id) await updateDoc(doc(db,"people",pr),{spouseId:P.id});
+        const pr=partnerOf(P); if(pr && state.people[pr] && state.people[pr].spouseId!==P.id) await updateDoc(doc(db,"people",pr),{spouseId:P.id});
         pendingFocusId=ref.id;
       } else if(!partnerOf(A)){
         const ref=await addDoc(peopleCol, base(name,{spouseId:A.id, inlineWith:A.id, sex}));
@@ -511,8 +591,10 @@ const $ = s => document.querySelector(s);
     $("#personScrim").classList.remove("open");
     const op=pendingOp; pendingOp=null;
     try{
-      if(op.mode==="edit") await updateDoc(doc(db,"people",op.id),{name:name.slice(0,60),editedBy:state.me,updatedAt:Date.now()});
-      else if(op.mode==="first"){ const ref=await addDoc(peopleCol, base(name,{parentId:null})); pendingFocusId=ref.id; }
+      if(op.mode==="edit"){
+        await updateDoc(doc(db,"people",op.id),{name:name.slice(0,60), sex:selSex||null, editedBy:state.me, updatedAt:Date.now()});
+        if(linkTargetId && linkTargetId!==op.id){ await makeSiblingOf(op.id, linkTargetId); pendingFocusId=op.id; }
+      } else if(op.mode==="first"){ const ref=await addDoc(peopleCol, base(name,{parentId:null})); pendingFocusId=ref.id; }
       else await createRelative(selRel, op.personId, name);
     }catch(e){ alert("Couldn't save — check your connection and Firestore rules.\n\n"+e.message); }
   }
@@ -554,7 +636,7 @@ const $ = s => document.querySelector(s);
     const sibs=map[key]||[];
     const i=sibs.findIndex(s=>s.id===id), j=i+dir;
     if(i<0||j<0||j>=sibs.length) return;
-    const a=sibs[i], b=sibs[j], ao=ord(a), bo=ord(b);
+    const a=sibs[i], b=sibs[j], ao=ordv(a), bo=ordv(b);
     try{ const batch=writeBatch(db); batch.update(doc(db,"people",a.id),{order:bo}); batch.update(doc(db,"people",b.id),{order:ao}); await batch.commit(); }
     catch(e){ alert("Couldn't reorder.\n\n"+e.message); }
   }
@@ -603,3 +685,4 @@ const $ = s => document.querySelector(s);
 </script>
 </body>
 </html>
+
