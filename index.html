@@ -46,6 +46,14 @@
   .tbright{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
   .minibtn{font:inherit;font-size:12px;font-weight:500;padding:7px 11px;border-radius:9px;border:1px solid var(--border);background:var(--paper-card);color:var(--ink);cursor:pointer;box-shadow:var(--shadow)}
   .minibtn:hover{background:#FBF9F2}
+  .selwrap{display:inline-flex;align-items:center;gap:7px;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);font-weight:600}
+  .selwrap select{font-family:"Inter",sans-serif;font-size:12.5px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--ink);background:var(--paper-card);border:1px solid var(--border);border-radius:9px;padding:6px 9px;cursor:pointer;box-shadow:var(--shadow)}
+  .legend{max-width:1180px;margin:11px auto 0;padding:0 24px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .legend .lg-lab{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--ink-soft);font-weight:600;margin-right:2px}
+  .legend .lg{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;color:var(--ink);background:var(--paper-card);border:1px solid var(--border);border-radius:999px;padding:5px 11px;line-height:1.1}
+  .legend button.lg{cursor:pointer;font-family:inherit}
+  .legend button.lg:hover{background:#FBF9F2;border-color:#BFB69E}
+  .legend .sw{width:11px;height:11px;border-radius:3px;flex:none;border:1px solid rgba(0,0,0,.18)}
   .stat{font-size:13px;color:var(--ink-soft)}
   .stat b{color:var(--ink);font-weight:600}
   .live{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-soft)}
@@ -93,7 +101,7 @@
   .marriage::after{content:"";position:absolute;left:50%;top:50%;width:9px;height:9px;background:var(--paper-card);border:2px solid var(--branch);border-radius:50%;transform:translate(-50%,-50%)}
   .toggle{position:relative;z-index:2;margin-top:8px;font:inherit;font-size:12px;font-weight:600;line-height:1;color:var(--ink-soft);background:var(--paper-card);border:1px solid var(--border);border-radius:999px;padding:4px 10px;cursor:pointer;box-shadow:var(--shadow)}
   .toggle:hover{background:#FBF9F2;color:var(--ink);border-color:#BFB69E}
-  .node{position:relative;background:var(--paper-card);border:1px solid var(--border);border-radius:13px;padding:13px 15px 12px;min-width:152px;max-width:212px;box-shadow:var(--shadow);text-align:left;display:flex;flex-direction:column;transition:box-shadow .18s ease, border-color .18s ease}
+  .node{position:relative;background:var(--paper-card);border:1px solid var(--border);border-top:3px solid var(--border);border-radius:13px;padding:12px 15px 12px;min-width:152px;max-width:212px;box-shadow:var(--shadow);text-align:left;display:flex;flex-direction:column;transition:box-shadow .18s ease, border-color .18s ease}
   .node:hover{border-color:#C9C0A8;box-shadow:0 1px 0 rgba(35,48,42,.05),0 16px 30px -20px rgba(35,48,42,.55)}
   .node.mine{border-color:var(--ochre)}
   .node.mine::after{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:3px;background:var(--ochre)}
@@ -164,8 +172,8 @@
   <header>
     <div class="brand">
       <p class="eyebrow">A shared family record</p>
-      <h1>Zaatar Family Tree</h1>
-      <p>Build families in every direction, link them through marriages and shared siblings, and edit who's who. Collapse branches and reorder siblings as it grows.</p>
+      <h1>The Family Tree</h1>
+      <p>Build families in every direction, link them through marriages and shared siblings, and colour them by family, generation, or sex. Collapse branches and reorder siblings as it grows.</p>
     </div>
     <div class="who" id="whoCard" hidden>
       <div class="lab">You're adding as</div>
@@ -181,12 +189,22 @@
       <div class="results" id="searchResults"></div>
     </div>
     <div class="tbright">
+      <label class="selwrap">Colour
+        <select id="colorMode" aria-label="Colour mode">
+          <option value="family">by family</option>
+          <option value="generation">by generation</option>
+          <option value="sex">by sex</option>
+          <option value="none">none</option>
+        </select>
+      </label>
       <button class="minibtn" id="collapseAll">Collapse all</button>
       <button class="minibtn" id="expandAll">Expand all</button>
       <div class="stat"><b id="countNum">0</b> people</div>
       <div class="live"><span class="pulse off" id="pulse"></span><span id="liveLabel">Connecting…</span></div>
     </div>
   </div>
+
+  <div class="legend" id="legend" style="display:none"></div>
 
   <main class="canvas">
     <div class="viewport" id="viewport">
@@ -233,6 +251,7 @@
       <div class="editblock" id="editExtra" style="display:none">
         <label>Sex</label>
         <div class="rel-row" id="sexRow">
+          <button type="button" data-sex="">Unspecified</button>
           <button type="button" data-sex="male">♂ Male</button>
           <button type="button" data-sex="female">♀ Female</button>
         </div>
@@ -263,7 +282,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
   import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, writeBatch }
     from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
- // Import the functions you need from the SDKs you need
+
 
 
 // Your web app's Firebase configuration
@@ -278,7 +297,6 @@ const firebaseConfig = {
   //measurementId: "G-D1HF5LD8ZK"
 };
 
-
 const $ = s => document.querySelector(s);
   const state = { people:{}, me:"" };
   const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
@@ -287,6 +305,19 @@ const $ = s => document.querySelector(s);
   const roman=n=>ROMAN[n]||String(n);
   function lsGet(k){ try{ return localStorage.getItem(k)||""; }catch(e){ return ""; } }
   function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+  /* ---------- colour ---------- */
+  const PAL=["#5E7E57","#B6753F","#5B7E97","#9A6A93","#7F8A3E","#A65A4E","#4E8A86","#8A6FA8","#B0892E","#6C7480"];
+  const SEX={male:"#5B7E97",female:"#B06A86",none:"#9A8C73"};
+  let colorMode=lsGet("ft_colormode")||"family";
+  let META={gen:{},fam:{}};
+  function colorFor(p){
+    if(colorMode==="none") return null;
+    if(colorMode==="family") return META.fam[p.id]||null;
+    if(colorMode==="generation"){ const g=META.gen[p.id]||1; return PAL[(g-1)%PAL.length]; }
+    if(colorMode==="sex") return SEX[p.sex||"none"];
+    return null;
+  }
 
   const viewport=$("#viewport"), stage=$("#stage"), tree=$("#tree");
 
@@ -368,6 +399,18 @@ const $ = s => document.querySelector(s);
     Object.values(map).forEach(a=>a.sort((x,y)=>ordv(x)-ordv(y)));
     return map;
   }
+  function computeMeta(people,map,roots){
+    const gen={}, fam={}, seen=new Set();
+    function visit(p,col,g){
+      if(seen.has(p.id)) return; seen.add(p.id);
+      gen[p.id]=g; fam[p.id]=col;
+      const pr=partnerOf(p);
+      if(pr && people[pr] && isInline(people[pr]) && !seen.has(pr)){ seen.add(pr); gen[pr]=g; fam[pr]=col; }
+      (map[p.id]||[]).forEach(k=>visit(k,col,g+1));
+    }
+    roots.forEach((r,i)=>visit(r,PAL[i%PAL.length],1));
+    return {gen,fam};
+  }
   function descCount(id,map,seen){ if(seen.has(id)) return 0; seen.add(id); const kids=map[id]||[]; let c=kids.length; for(const k of kids) c+=descCount(k.id,map,seen); return c; }
   function metaLine(p){
     const added=`added by <span class="by">${esc(p.addedBy||"someone")}</span>`;
@@ -375,6 +418,7 @@ const $ = s => document.querySelector(s);
     return added + (wasEdited?` · edited by <span class="by">${esc(p.editedBy)}</span>`:"");
   }
   function sexGlyph(p){ return p.sex==="male"?'<span class="sx">♂</span>':p.sex==="female"?'<span class="sx">♀</span>':""; }
+  function accentStyle(p){ const c=colorFor(p); return c?` style="border-top-color:${c};background:color-mix(in srgb, ${c} 8%, var(--paper-card))"`:""; }
   function card(p,opts){
     const mine=state.me && (p.editedBy===state.me || p.addedBy===state.me);
     const chip=opts.chipPartner?`<button class="chip" data-act="focus" data-id="${opts.chipPartner.id}" title="Married — jump to their family">⚭ ${esc(opts.chipPartner.name)}</button>`:"";
@@ -386,7 +430,7 @@ const $ = s => document.querySelector(s);
     acts+=`<button class="add" data-act="addrel" data-id="${p.id}">+ Add</button>`;
     acts+=`<button data-act="edit" data-id="${p.id}">Edit</button>`;
     acts+=`<button class="del" data-act="del" data-id="${p.id}">Remove</button>`;
-    return `<div class="node ${opts.role==='inline'?'spouse':''} ${mine?'mine':''}" data-id="${p.id}"><div class="name">${esc(p.name)}${sexGlyph(p)}</div><div class="meta">${metaLine(p)}</div>${chip}<div class="actions">${acts}</div></div>`;
+    return `<div class="node ${opts.role==='inline'?'spouse':''} ${mine?'mine':''}" data-id="${p.id}"${accentStyle(p)}><div class="name">${esc(p.name)}${sexGlyph(p)}</div><div class="meta">${metaLine(p)}</div>${chip}<div class="actions">${acts}</div></div>`;
   }
   function unit(p,people,gen,idx,total,hasKids,collapsed,desc){
     const partner=partnerOf(p)?people[partnerOf(p)]:null;
@@ -406,17 +450,45 @@ const $ = s => document.querySelector(s);
     const kidsHtml=(has && !collapsed)?`<ul>${kids.map((k,i)=>renderNode(k,map,people,gen+1,i,kids.length,seen)).join("")}</ul>`:"";
     return `<li>${unit(p,people,gen,idx,total,has,collapsed,desc)}${kidsHtml}</li>`;
   }
+  function renderLegend(roots){
+    const el=$("#legend");
+    if(colorMode==="none"){ el.style.display="none"; el.innerHTML=""; return; }
+    el.style.display="flex";
+    if(colorMode==="family"){
+      const items=roots.map((r,i)=>{
+        const pr=partnerOf(r); const sp=(pr&&state.people[pr]&&isInline(state.people[pr]))?" &amp; "+esc(state.people[pr].name):"";
+        return `<button class="lg" data-act="legendjump" data-id="${r.id}"><span class="sw" style="background:${PAL[i%PAL.length]}"></span>${esc(r.name)}${sp}</button>`;
+      }).join("");
+      el.innerHTML=`<span class="lg-lab">Families</span>`+(items||`<span class="lg">—</span>`);
+    } else if(colorMode==="generation"){
+      let maxG=1; Object.values(META.gen).forEach(g=>{ if(g>maxG) maxG=g; });
+      let s=""; for(let g=1;g<=maxG;g++) s+=`<span class="lg"><span class="sw" style="background:${PAL[(g-1)%PAL.length]}"></span>Gen ${roman(g)}</span>`;
+      el.innerHTML=`<span class="lg-lab">Generations</span>`+s;
+    } else if(colorMode==="sex"){
+      el.innerHTML=`<span class="lg-lab">Sex</span>`+
+        `<span class="lg"><span class="sw" style="background:${SEX.male}"></span>Male</span>`+
+        `<span class="lg"><span class="sw" style="background:${SEX.female}"></span>Female</span>`+
+        `<span class="lg"><span class="sw" style="background:${SEX.none}"></span>Unspecified</span>`;
+    }
+  }
   function render(){
     const people=state.people, count=Object.keys(people).length;
     $("#countNum").textContent=count;
     if(count===0){
+      $("#legend").style.display="none";
       tree.innerHTML=`<div class="empty"><div class="seed">🌱</div><h2>Plant the first person</h2><p>Start with anyone. You can add their parents, children, siblings, and partner afterward to grow in every direction.</p><button class="btn" id="addRoot">Add the first person</button></div>`;
       const b=$("#addRoot"); if(b) b.addEventListener("click",()=>openPerson({mode:"first"}));
       return;
     }
     const map=childrenMap(people), roots=map["__root__"]||[], seen=new Set();
+    META=computeMeta(people,map,roots);
     tree.innerHTML=`<ul>${roots.map((r,i)=>renderNode(r,map,people,1,i,roots.length,seen)).join("")}</ul>`;
+    renderLegend(roots);
   }
+
+  $("#colorMode").value=colorMode;
+  $("#colorMode").addEventListener("change",e=>{ colorMode=e.target.value; lsSet("ft_colormode",colorMode); render(); });
+  $("#legend").addEventListener("click",e=>{ const b=e.target.closest("button[data-act='legendjump']"); if(b) goTo(b.dataset.id); });
 
   function collapseAll(){ const map=childrenMap(state.people); collapsedSet=new Set(Object.keys(map).filter(k=>k!=="__root__" && (map[k]||[]).length)); saveCollapsed(); render(); fit(); }
   function expandAll(){ collapsedSet=new Set(); saveCollapsed(); render(); fit(); }
@@ -684,4 +756,6 @@ const $ = s => document.querySelector(s);
 </script>
 </body>
 </html>
+
+
 
