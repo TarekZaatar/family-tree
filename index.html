@@ -251,7 +251,6 @@
       <div class="editblock" id="editExtra" style="display:none">
         <label>Sex</label>
         <div class="rel-row" id="sexRow">
-          <button type="button" data-sex="">Unspecified</button>
           <button type="button" data-sex="male">♂ Male</button>
           <button type="button" data-sex="female">♀ Female</button>
         </div>
@@ -467,8 +466,8 @@ const $ = s => document.querySelector(s);
     } else if(colorMode==="sex"){
       el.innerHTML=`<span class="lg-lab">Sex</span>`+
         `<span class="lg"><span class="sw" style="background:${SEX.male}"></span>Male</span>`+
-        `<span class="lg"><span class="sw" style="background:${SEX.female}"></span>Female</span>`+
-        `<span class="lg"><span class="sw" style="background:${SEX.none}"></span>Unspecified</span>`;
+        `<span class="lg"><span class="sw" style="background:${SEX.female}"></span>Female</span>`
+        
     }
   }
   function render(){
