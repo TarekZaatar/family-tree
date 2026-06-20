@@ -78,7 +78,8 @@
     background:radial-gradient(circle, rgba(120,108,84,.10) 1px, transparent 1.5px) 0 0/24px 24px, #EFEBDD;
     box-shadow:inset 0 1px 0 rgba(255,255,255,.4), var(--shadow)}
   .viewport.grabbing{cursor:grabbing}
-  .stage{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform}
+  .stage{position:absolute;top:0;left:0;transform-origin:0 0}
+  .stage.active{will-change:transform}
   .tree{display:inline-block;padding:30px 40px}
   .tree ul{position:relative;padding-top:26px;margin:0;display:flex;justify-content:center;list-style:none}
   .tree li{list-style:none;position:relative;padding:26px 10px 0;display:flex;flex-direction:column;align-items:center}
@@ -114,6 +115,13 @@
   .node .meta .by{color:var(--ochre)}
   .node .chip{align-self:flex-start;margin-top:7px;font:inherit;font-size:11.5px;font-weight:500;color:var(--ochre);background:#FBF1E7;border:1px solid #E6CDB4;border-radius:999px;padding:3px 9px;cursor:pointer;display:inline-flex;gap:5px;align-items:center;max-width:100%}
   .node .chip:hover{background:#F6E6D4}
+  .node.linked{cursor:pointer}
+  .node.linked .name{padding-right:18px}
+  .node.linked:hover{transform:translateY(-2px);border-color:var(--ochre)}
+  .node.linked::before{content:"↗";position:absolute;top:7px;right:10px;font-size:12px;font-weight:700;color:var(--ochre);opacity:.85}
+  .node.ref{background:#F1EFE6;border-style:dashed}
+  .node .jump{align-self:flex-start;margin-top:7px;font:inherit;font-size:11px;font-weight:600;color:#566a5e;background:#EDF1E8;border:1px solid #C8D2BB;border-radius:999px;padding:3px 10px;cursor:pointer;display:inline-flex;gap:5px;align-items:center;max-width:100%;text-align:left;line-height:1.25}
+  .node .jump:hover{background:#E3EAD7;border-color:#AEBA9C;color:var(--ink)}
   .node .actions{display:flex;gap:4px;margin-top:auto;padding-top:11px;flex-wrap:wrap}
   .node .actions button{font:inherit;font-size:11.5px;font-weight:500;cursor:pointer;border-radius:7px;border:1px solid var(--border);background:#fff;color:var(--ink);padding:4px 9px;line-height:1;transition:background .15s,color .15s,border-color .15s}
   .node .actions button:hover:not(:disabled){border-color:#BFB69E;background:#FBF9F2}
@@ -172,7 +180,7 @@
   <header>
     <div class="brand">
       <p class="eyebrow">A shared family record</p>
-      <h1>The Family Tree</h1>
+      <h1>Zaatar Family Tree</h1>
       <p>Build families in every direction, link them through marriages and shared siblings, and colour them by family, generation, or sex. Collapse branches and reorder siblings as it grows.</p>
     </div>
     <div class="who" id="whoCard" hidden>
@@ -209,7 +217,7 @@
   <main class="canvas">
     <div class="viewport" id="viewport">
       <div class="stage" id="stage"><div class="tree" id="tree"></div></div>
-      <div class="hint" id="hint">Drag to move · scroll or pinch to zoom</div>
+      <div class="hint" id="hint">Drag to move · scroll, pinch or double-click to zoom · arrow keys to pan</div>
       <div class="zoomctl">
         <button id="zOut" aria-label="Zoom out">−</button>
         <span class="pct" id="zoomPct">100%</span>
@@ -283,7 +291,6 @@
     from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 
-
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
@@ -331,13 +338,25 @@ const $ = s => document.querySelector(s);
 
   const partnerOf=p=>p.spouseId||p.spouseOf||p.inlineWith||null;
   const isInline=p=>!p.parentId && (p.inlineWith||p.spouseOf);
+  const hostId=p=>{ const h=p.inlineWith||p.spouseOf; return (h && state.people[h])?h:null; };
+  const drawnBeside=(q,hostPid)=>q && (q.inlineWith===hostPid || q.spouseOf===hostPid);
   const ordv=p=>(p.order ?? p.createdAt ?? 0);
 
   /* ---------- pan / zoom ---------- */
-  const MIN=0.12, MAX=3;
-  let scale=1, tx=0, ty=0, animT=null;
-  function applyTransform(){ stage.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`; $("#zoomPct").textContent=Math.round(scale*100)+"%"; }
-  function withAnim(fn){ stage.style.transition="transform .35s cubic-bezier(.2,.8,.2,1)"; fn(); clearTimeout(animT); animT=setTimeout(()=>{ stage.style.transition=""; },380); }
+  const MIN=0.12, MAX=4;
+  let scale=1, tx=0, ty=0, animT=null, waTimer=null;
+  function markActive(){ stage.classList.add("active"); clearTimeout(waTimer); waTimer=setTimeout(()=>stage.classList.remove("active"),240); }
+  function clampAxis(t,content,view,keep){ const lo=keep-content, hi=view-keep; if(lo>hi) return (view-content)/2; return Math.max(lo,Math.min(hi,t)); }
+  function applyTransform(){
+    const cw=tree.offsetWidth, ch=tree.offsetHeight;
+    if(cw && ch){
+      const keep=Math.min(110, viewport.clientWidth*0.4, viewport.clientHeight*0.4);
+      tx=clampAxis(tx, cw*scale, viewport.clientWidth, keep);
+      ty=clampAxis(ty, ch*scale, viewport.clientHeight, keep);
+    }
+    stage.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`; $("#zoomPct").textContent=Math.round(scale*100)+"%";
+  }
+  function withAnim(fn){ markActive(); stage.style.transition="transform .35s cubic-bezier(.2,.8,.2,1)"; fn(); clearTimeout(animT); animT=setTimeout(()=>{ stage.style.transition=""; markActive(); },380); }
   function zoomAt(px,py,factor){ const wx=(px-tx)/scale, wy=(py-ty)/scale; scale=clamp(scale*factor,MIN,MAX); tx=px-wx*scale; ty=py-wy*scale; applyTransform(); }
   function zoomButton(factor){ const vp=viewport.getBoundingClientRect(); withAnim(()=>zoomAt(vp.width/2,vp.height/2,factor)); }
   function fit(){
@@ -346,15 +365,21 @@ const $ = s => document.querySelector(s);
     const s=clamp(Math.min((vp.width-pad)/w,(vp.height-pad)/h,1.2),MIN,MAX);
     withAnim(()=>{ scale=s; tx=(vp.width-w*s)/2; ty=Math.max(22,(vp.height-h*s)/2); applyTransform(); });
   }
-  function focusNode(id, target){
-    const el=tree.querySelector(`.node[data-id="${CSS.escape(id)}"]`); if(!el) return;
+  function focusEl(el, target){
+    if(!el) return;
     const vp=viewport.getBoundingClientRect(), r=el.getBoundingClientRect();
     const scx=(r.left+r.width/2)-vp.left, scy=(r.top+r.height/2)-vp.top;
     const wx=(scx-tx)/scale, wy=(scy-ty)/scale;
     withAnim(()=>{ scale=clamp(target||Math.max(scale,1),MIN,MAX); tx=vp.width/2-wx*scale; ty=vp.height/2-wy*scale; applyTransform(); });
     el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
   }
-  viewport.addEventListener("wheel",e=>{ e.preventDefault(); hideHint(); const vp=viewport.getBoundingClientRect(); zoomAt(e.clientX-vp.left, e.clientY-vp.top, Math.exp(-e.deltaY*0.0015)); },{passive:false});
+  function focusNode(id, target){ focusEl(tree.querySelector(`.node[data-id="${CSS.escape(id)}"]`), target); }
+  function focusOcc(id, occ, target){
+    const sel=`.node[data-id="${CSS.escape(id)}"]`;
+    focusEl(tree.querySelector(`${sel}[data-occ="${occ}"]`)||tree.querySelector(sel), target);
+  }
+  viewport.addEventListener("wheel",e=>{ e.preventDefault(); hideHint(); markActive(); const vp=viewport.getBoundingClientRect(); zoomAt(e.clientX-vp.left, e.clientY-vp.top, Math.exp(-e.deltaY*0.0015)); },{passive:false});
+  viewport.addEventListener("dblclick",e=>{ if(e.target.closest("button")) return; e.preventDefault(); hideHint(); const vp=viewport.getBoundingClientRect(); withAnim(()=>zoomAt(e.clientX-vp.left, e.clientY-vp.top, 1.7)); });
   const ptrs=new Map(); let panning=false, moved=false, sx=0, sy=0, stx=0, sty=0, pinchDist=0, pinchScale=1, pinchWorld={x:0,y:0}, suppressClick=false;
   const ptrDist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
   viewport.addEventListener("pointerdown",e=>{
@@ -364,8 +389,8 @@ const $ = s => document.querySelector(s);
   });
   viewport.addEventListener("pointermove",e=>{
     if(!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
-    if(ptrs.size>=2){ const [a,b]=[...ptrs.values()], vp=viewport.getBoundingClientRect(); scale=clamp(pinchScale*(ptrDist(a,b)/pinchDist),MIN,MAX); const mx=(a.x+b.x)/2-vp.left, my=(a.y+b.y)/2-vp.top; tx=mx-pinchWorld.x*scale; ty=my-pinchWorld.y*scale; applyTransform(); hideHint(); }
-    else if(panning){ const dx=e.clientX-sx, dy=e.clientY-sy; if(!moved && Math.hypot(dx,dy)>5){ moved=true; viewport.classList.add("grabbing"); hideHint(); try{viewport.setPointerCapture(e.pointerId);}catch(_){ } } if(moved){ tx=stx+dx; ty=sty+dy; applyTransform(); } }
+    if(ptrs.size>=2){ const [a,b]=[...ptrs.values()], vp=viewport.getBoundingClientRect(); scale=clamp(pinchScale*(ptrDist(a,b)/pinchDist),MIN,MAX); const mx=(a.x+b.x)/2-vp.left, my=(a.y+b.y)/2-vp.top; tx=mx-pinchWorld.x*scale; ty=my-pinchWorld.y*scale; applyTransform(); hideHint(); markActive(); }
+    else if(panning){ const dx=e.clientX-sx, dy=e.clientY-sy; if(!moved && Math.hypot(dx,dy)>5){ moved=true; viewport.classList.add("grabbing"); hideHint(); try{viewport.setPointerCapture(e.pointerId);}catch(_){ } } if(moved){ tx=stx+dx; ty=sty+dy; applyTransform(); markActive(); } }
   });
   function endPointer(e){
     if(!ptrs.has(e.pointerId)) return; ptrs.delete(e.pointerId);
@@ -378,7 +403,12 @@ const $ = s => document.querySelector(s);
   $("#zIn").addEventListener("click",()=>zoomButton(1.25));
   $("#zOut").addEventListener("click",()=>zoomButton(0.8));
   $("#zFit").addEventListener("click",fit);
-  document.addEventListener("keydown",e=>{ if(["INPUT","TEXTAREA"].includes(document.activeElement?.tagName)) return; if(e.key==="+"||e.key==="=") zoomButton(1.25); else if(e.key==="-") zoomButton(0.8); else if(e.key==="0") fit(); });
+  document.addEventListener("keydown",e=>{ if(["INPUT","TEXTAREA"].includes(document.activeElement?.tagName)) return;
+    if(e.key==="+"||e.key==="=") zoomButton(1.25);
+    else if(e.key==="-") zoomButton(0.8);
+    else if(e.key==="0") fit();
+    else if(e.key.startsWith("Arrow")){ e.preventDefault(); const s=70; withAnim(()=>{ if(e.key==="ArrowLeft")tx+=s; else if(e.key==="ArrowRight")tx-=s; else if(e.key==="ArrowUp")ty+=s; else ty-=s; applyTransform(); }); }
+  });
   let hintTimer=setTimeout(hideHint,6000);
   function hideHint(){ const h=$("#hint"); if(h) h.classList.add("gone"); clearTimeout(hintTimer); }
 
@@ -390,9 +420,14 @@ const $ = s => document.querySelector(s);
   function childrenMap(people){
     const map={};
     Object.values(people).forEach(p=>{
-      if(isInline(p)) return;
+      const h=p.inlineWith||p.spouseOf; const hosted=h && people[h];
+      if(hosted){
+        // p is drawn beside their partner (host). Place a clickable reference in their birth family if they have one.
+        if(p.parentId && people[p.parentId]) (map[p.parentId]=map[p.parentId]||[]).push(p);
+        return;
+      }
       const parent=p.parentId?people[p.parentId]:null;
-      const pid=(parent && !isInline(parent))?p.parentId:"__root__";
+      const pid=parent?p.parentId:"__root__";
       (map[pid]=map[pid]||[]).push(p);
     });
     Object.values(map).forEach(a=>a.sort((x,y)=>ordv(x)-ordv(y)));
@@ -404,7 +439,7 @@ const $ = s => document.querySelector(s);
       if(seen.has(p.id)) return; seen.add(p.id);
       gen[p.id]=g; fam[p.id]=col;
       const pr=partnerOf(p);
-      if(pr && people[pr] && isInline(people[pr]) && !seen.has(pr)){ seen.add(pr); gen[pr]=g; fam[pr]=col; }
+      if(pr && people[pr] && drawnBeside(people[pr],p.id) && !seen.has(pr)){ seen.add(pr); gen[pr]=g; fam[pr]=col; }
       (map[p.id]||[]).forEach(k=>visit(k,col,g+1));
     }
     roots.forEach((r,i)=>visit(r,PAL[i%PAL.length],1));
@@ -420,28 +455,48 @@ const $ = s => document.querySelector(s);
   function accentStyle(p){ const c=colorFor(p); return c?` style="border-top-color:${c};background:color-mix(in srgb, ${c} 8%, var(--paper-card))"`:""; }
   function card(p,opts){
     const mine=state.me && (p.editedBy===state.me || p.addedBy===state.me);
+    const occ=opts.occ||"home";
+    const linked=!!opts.link;
+    const jumpTo=occ==="home"?"ref":"home";
     const chip=opts.chipPartner?`<button class="chip" data-act="focus" data-id="${opts.chipPartner.id}" title="Married — jump to their family">⚭ ${esc(opts.chipPartner.name)}</button>`:"";
+    const jump=linked?`<button class="jump" data-act="jumpocc" data-id="${p.id}" data-occ="${jumpTo}">${esc(opts.jump||"see other family")} ↗</button>`:"";
     let acts="";
-    if(opts.role==="node"){
-      acts+=`<button class="mv" data-act="moveL" data-id="${p.id}" ${opts.canLeft?"":"disabled"} aria-label="Move earlier">◀</button>`;
-      acts+=`<button class="mv" data-act="moveR" data-id="${p.id}" ${opts.canRight?"":"disabled"} aria-label="Move later">▶</button>`;
+    if(opts.role==="ref"){
+      acts+=`<button data-act="edit" data-id="${p.id}">Edit</button>`;
+    } else {
+      if(opts.role==="node"){
+        acts+=`<button class="mv" data-act="moveL" data-id="${p.id}" ${opts.canLeft?"":"disabled"} aria-label="Move earlier">◀</button>`;
+        acts+=`<button class="mv" data-act="moveR" data-id="${p.id}" ${opts.canRight?"":"disabled"} aria-label="Move later">▶</button>`;
+      }
+      acts+=`<button class="add" data-act="addrel" data-id="${p.id}">+ Add</button>`;
+      acts+=`<button data-act="edit" data-id="${p.id}">Edit</button>`;
+      acts+=`<button class="del" data-act="del" data-id="${p.id}">Remove</button>`;
     }
-    acts+=`<button class="add" data-act="addrel" data-id="${p.id}">+ Add</button>`;
-    acts+=`<button data-act="edit" data-id="${p.id}">Edit</button>`;
-    acts+=`<button class="del" data-act="del" data-id="${p.id}">Remove</button>`;
-    return `<div class="node ${opts.role==='inline'?'spouse':''} ${mine?'mine':''}" data-id="${p.id}"${accentStyle(p)}><div class="name">${esc(p.name)}${sexGlyph(p)}</div><div class="meta">${metaLine(p)}</div>${chip}<div class="actions">${acts}</div></div>`;
+    const cls=`node ${opts.role==='inline'?'spouse':''} ${opts.role==='ref'?'ref':''} ${linked?'linked':''} ${mine?'mine':''}`;
+    const jumpAttr=linked?` data-jump="${jumpTo}"`:"";
+    return `<div class="${cls}" data-id="${p.id}" data-occ="${occ}"${jumpAttr}${accentStyle(p)}><div class="name">${esc(p.name)}${sexGlyph(p)}</div><div class="meta">${metaLine(p)}</div>${chip}${jump}<div class="actions">${acts}</div></div>`;
   }
   function unit(p,people,gen,idx,total,hasKids,collapsed,desc){
-    const partner=partnerOf(p)?people[partnerOf(p)]:null;
-    const inlineP=(partner && isInline(partner))?partner:null;
+    const partnerId=partnerOf(p); const partner=partnerId?people[partnerId]:null;
+    const inlineP=(partner && drawnBeside(partner,p.id))?partner:null;
     const chipPartner=(partner && !inlineP)?partner:null;
-    let inner=card(p,{role:"node",canLeft:idx>0,canRight:idx<total-1,chipPartner});
-    if(inlineP) inner+=`<div class="marriage" aria-hidden="true"></div>`+card(inlineP,{role:"inline"});
+    let inner=card(p,{role:"node",occ:"home",canLeft:idx>0,canRight:idx<total-1,chipPartner});
+    if(inlineP){
+      const birth=(inlineP.parentId && people[inlineP.parentId])?people[inlineP.parentId]:null;
+      inner+=`<div class="marriage" aria-hidden="true"></div>`+card(inlineP,{role:"inline",occ:"home",link:!!birth,jump:birth?("also in "+birth.name+"’s line"):null});
+    }
     const toggle=hasKids?`<button class="toggle" data-act="toggle" data-id="${p.id}">${collapsed?("▸ "+desc):"▾"}</button>`:"";
     return `<div class="unit"><div class="gen">Generation ${roman(gen)}</div><div class="couple">${inner}</div>${toggle}</div>`;
   }
+  function refUnit(p,people,gen){
+    const host=people[p.inlineWith||p.spouseOf];
+    return `<div class="unit"><div class="gen">Generation ${roman(gen)}</div><div class="couple">${card(p,{role:"ref",occ:"ref",link:true,jump:host?("with "+host.name):"see family"})}</div></div>`;
+  }
   function renderNode(p,map,people,gen,idx,total,seen){
     if(seen.has(p.id)) return ""; seen.add(p.id);
+    // a person drawn beside a partner appears here only as a reference leaf (their real card sits beside their spouse)
+    const h=p.inlineWith||p.spouseOf;
+    if(h && people[h]) return `<li>${refUnit(p,people,gen)}</li>`;
     const kids=map[p.id]||[];
     const has=kids.length>0;
     const collapsed=has && collapsedSet.has(p.id);
@@ -455,7 +510,7 @@ const $ = s => document.querySelector(s);
     el.style.display="flex";
     if(colorMode==="family"){
       const items=roots.map((r,i)=>{
-        const pr=partnerOf(r); const sp=(pr&&state.people[pr]&&isInline(state.people[pr]))?" &amp; "+esc(state.people[pr].name):"";
+        const pr=partnerOf(r); const sp=(pr&&state.people[pr]&&drawnBeside(state.people[pr],r.id))?" &amp; "+esc(state.people[pr].name):"";
         return `<button class="lg" data-act="legendjump" data-id="${r.id}"><span class="sw" style="background:${PAL[i%PAL.length]}"></span>${esc(r.name)}${sp}</button>`;
       }).join("");
       el.innerHTML=`<span class="lg-lab">Families</span>`+(items||`<span class="lg">—</span>`);
@@ -466,8 +521,7 @@ const $ = s => document.querySelector(s);
     } else if(colorMode==="sex"){
       el.innerHTML=`<span class="lg-lab">Sex</span>`+
         `<span class="lg"><span class="sw" style="background:${SEX.male}"></span>Male</span>`+
-        `<span class="lg"><span class="sw" style="background:${SEX.female}"></span>Female</span>`
-        
+        `<span class="lg"><span class="sw" style="background:${SEX.female}"></span>Female</span>`;
     }
   }
   function render(){
@@ -494,18 +548,20 @@ const $ = s => document.querySelector(s);
   $("#collapseAll").addEventListener("click",collapseAll);
   $("#expandAll").addEventListener("click",expandAll);
   function ensureVisible(id){
-    let start=state.people[id]; if(!start) return;
-    let cur=isInline(start)?state.people[partnerOf(start)]:start;
-    const guard=new Set();
-    while(cur && cur.parentId && !guard.has(cur.id)){ guard.add(cur.id); collapsedSet.delete(cur.parentId); cur=state.people[cur.parentId]; }
+    const start=state.people[id]; if(!start) return;
+    const expandUp=(pid)=>{ const guard=new Set(); let n=pid; while(n && !guard.has(n)){ guard.add(n); collapsedSet.delete(n); n=state.people[n]?.parentId; } };
+    if(start.parentId) expandUp(start.parentId);        // birth-family reference
+    const h=hostId(start);                               // beside-spouse home
+    if(h){ const host=state.people[h]; if(host){ collapsedSet.delete(host.id); if(host.parentId) expandUp(host.parentId); } }
     saveCollapsed(); render();
   }
+  function goToOcc(id,occ){ results.classList.remove("open"); ensureVisible(id); requestAnimationFrame(()=>focusOcc(id,occ,Math.max(scale,1.1))); }
 
   /* ---------- search ---------- */
   const searchInput=$("#search"), results=$("#searchResults");
   function relLabel(p){
     const pr=partnerOf(p);
-    if(pr && state.people[pr] && isInline(p)) return "spouse of "+state.people[pr].name;
+    if(hostId(p) && state.people[hostId(p)]){ const sp="spouse of "+state.people[hostId(p)].name; return (p.parentId&&state.people[p.parentId])?(sp+" · also "+state.people[p.parentId].name+"’s family"):sp; }
     if(p.parentId && state.people[p.parentId]) return "child of "+state.people[p.parentId].name;
     if(pr && state.people[pr]) return "married to "+state.people[pr].name;
     return "top of tree";
@@ -541,12 +597,9 @@ const $ = s => document.querySelector(s);
   // returns a usable parent id for `personId`, creating a shared "Unknown" parent (and detaching from inline) if there's none
   async function ensureParent(personId){
     const p=state.people[personId];
-    if(p.parentId && state.people[p.parentId] && !isInline(state.people[p.parentId])) return p.parentId;
+    if(p.parentId && state.people[p.parentId]) return p.parentId;
     const ref=await addDoc(peopleCol, base("Unknown",{parentId:null}));
-    const upd={parentId:ref.id, updatedAt:Date.now()};
-    if(isInline(p)){ upd.inlineWith=null; upd.spouseOf=null; const pr=partnerOf(p); if(pr) upd.spouseId=pr; }
-    await updateDoc(doc(db,"people",personId), upd);
-    if(isInline(p)){ const pr=partnerOf(p); if(pr && state.people[pr] && state.people[pr].spouseId!==personId) await updateDoc(doc(db,"people",pr),{spouseId:personId}); }
+    await updateDoc(doc(db,"people",personId), {parentId:ref.id, updatedAt:Date.now()});
     return ref.id;
   }
   async function makeSiblingOf(personId,targetId){
@@ -554,11 +607,7 @@ const $ = s => document.querySelector(s);
     if(!state.people[targetId]) return;
     const sharedParentId=await ensureParent(targetId);
     if(wouldCycle(personId,sharedParentId)){ alert("That link would create a loop in the tree."); return; }
-    const person=state.people[personId];
-    const upd={parentId:sharedParentId, order:Date.now(), updatedAt:Date.now()};
-    if(isInline(person)){ upd.inlineWith=null; upd.spouseOf=null; const pr=partnerOf(person); if(pr) upd.spouseId=pr; }
-    await updateDoc(doc(db,"people",personId), upd);
-    if(isInline(person)){ const pr=partnerOf(person); if(pr && state.people[pr] && state.people[pr].spouseId!==personId) await updateDoc(doc(db,"people",pr),{spouseId:personId}); }
+    await updateDoc(doc(db,"people",personId), {parentId:sharedParentId, order:Date.now(), updatedAt:Date.now()});
   }
 
   /* ---------- add / edit ---------- */
@@ -631,7 +680,7 @@ const $ = s => document.querySelector(s);
   async function createRelative(rel,personId,name){
     const P=state.people[personId]; if(!P) return; const t=Date.now();
     if(rel==="child"){
-      const host=isInline(P)?partnerOf(P):P.id;
+      const host=hostId(P)||P.id;
       const ref=await addDoc(peopleCol, base(name,{parentId:host})); pendingFocusId=ref.id;
     } else if(rel==="partner"){
       if(partnerOf(P)) return;
@@ -645,10 +694,7 @@ const $ = s => document.querySelector(s);
       const A=P.parentId?state.people[P.parentId]:null;
       if(!A){
         const ref=await addDoc(peopleCol, base(name,{parentId:null, sex}));
-        const upd={parentId:ref.id, updatedAt:t};
-        if(isInline(P)){ upd.inlineWith=null; upd.spouseOf=null; const pr=partnerOf(P); if(pr) upd.spouseId=pr; }
-        await updateDoc(doc(db,"people",P.id), upd);
-        const pr=partnerOf(P); if(pr && state.people[pr] && state.people[pr].spouseId!==P.id) await updateDoc(doc(db,"people",pr),{spouseId:P.id});
+        await updateDoc(doc(db,"people",P.id), {parentId:ref.id, updatedAt:t});
         pendingFocusId=ref.id;
       } else if(!partnerOf(A)){
         const ref=await addDoc(peopleCol, base(name,{spouseId:A.id, inlineWith:A.id, sex}));
@@ -678,21 +724,24 @@ const $ = s => document.querySelector(s);
   async function removePerson(id){
     const p=state.people[id]; if(!p) return;
     const partner=partnerOf(p)?state.people[partnerOf(p)]:null;
+    const beside=hostId(p);
     try{
       const batch=writeBatch(db);
-      if(isInline(p)){
+      if(beside){
         if(!confirm(`Remove “${p.name}”?`)) return;
         if(partner) unlink(batch,partner,id);
+        Object.values(state.people).filter(x=>x.parentId===id).forEach(k=>batch.update(doc(db,"people",k.id),{parentId:p.parentId||null}));
         batch.delete(doc(db,"people",id));
       } else {
         const kids=Object.values(state.people).filter(x=>x.parentId===id);
         const dest=(p.parentId && state.people[p.parentId])?`“${state.people[p.parentId].name}”`:"the top of the tree";
         let msg=kids.length?`Remove “${p.name}”? Their ${kids.length} direct descendant(s) will move up to connect to ${dest}.`:`Remove “${p.name}” from the tree?`;
-        if(partner && isInline(partner)) msg+=`\n\nTheir spouse “${partner.name}” will be removed too.`;
+        const inlineSpouse=(partner && drawnBeside(partner,id))?partner:null;
+        if(inlineSpouse) msg+=`\n\nTheir spouse “${partner.name}” will be removed too.`;
         else if(partner) msg+=`\n\n“${partner.name}” will stay, no longer linked as a spouse.`;
         if(!confirm(msg)) return;
         kids.forEach(k=>batch.update(doc(db,"people",k.id),{parentId:p.parentId||null}));
-        if(partner){ if(isInline(partner)) batch.delete(doc(db,"people",partner.id)); else unlink(batch,partner,id); }
+        if(partner){ if(inlineSpouse) batch.delete(doc(db,"people",partner.id)); else unlink(batch,partner,id); }
         batch.delete(doc(db,"people",id));
       }
       await batch.commit();
@@ -702,7 +751,7 @@ const $ = s => document.querySelector(s);
     const p=state.people[id]; if(!p) return;
     const map=childrenMap(state.people);
     const parent=p.parentId?state.people[p.parentId]:null;
-    const key=(parent && !isInline(parent))?p.parentId:"__root__";
+    const key=parent?p.parentId:"__root__";
     const sibs=map[key]||[];
     const i=sibs.findIndex(s=>s.id===id), j=i+dir;
     if(i<0||j<0||j>=sibs.length) return;
@@ -712,15 +761,22 @@ const $ = s => document.querySelector(s);
   }
 
   tree.addEventListener("click",e=>{
-    const btn=e.target.closest("button[data-act]"); if(!btn) return;
-    const id=btn.dataset.id, act=btn.dataset.act;
-    if(act==="addrel") openPerson({mode:"relative",personId:id});
-    else if(act==="edit") openPerson({mode:"edit",id});
-    else if(act==="del") removePerson(id);
-    else if(act==="focus") goTo(id);
-    else if(act==="moveL") move(id,-1);
-    else if(act==="moveR") move(id,1);
-    else if(act==="toggle"){ if(collapsedSet.has(id)) collapsedSet.delete(id); else collapsedSet.add(id); saveCollapsed(); render(); }
+    const jb=e.target.closest("button[data-act='jumpocc']");
+    if(jb){ goToOcc(jb.dataset.id, jb.dataset.occ); return; }
+    const btn=e.target.closest("button[data-act]");
+    if(btn){
+      const id=btn.dataset.id, act=btn.dataset.act;
+      if(act==="addrel") openPerson({mode:"relative",personId:id});
+      else if(act==="edit") openPerson({mode:"edit",id});
+      else if(act==="del") removePerson(id);
+      else if(act==="focus") goTo(id);
+      else if(act==="moveL") move(id,-1);
+      else if(act==="moveR") move(id,1);
+      else if(act==="toggle"){ if(collapsedSet.has(id)) collapsedSet.delete(id); else collapsedSet.add(id); saveCollapsed(); render(); }
+      return;
+    }
+    const linked=e.target.closest(".node.linked");
+    if(linked) goToOcc(linked.dataset.id, linked.dataset.jump);
   });
   $("#changeName").addEventListener("click",openIdentity);
   $("#idSave").addEventListener("click",saveIdentity);
@@ -755,6 +811,4 @@ const $ = s => document.querySelector(s);
 </script>
 </body>
 </html>
-
-
 
